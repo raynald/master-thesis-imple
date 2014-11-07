@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
   cmdline.add("-k", "size of block for stochastic gradient (default = 1)", &exam_per_iter, 1);
   cmdline.add("-modelFile","name of model file (default = noModelFile)", &model_filename,"noModelFile");
   cmdline.add("-testFile","name of test data file (default = noTestFile)", &test_filename,"noTestFile");
+  //cmdline.add("-uniform","test under uniform condition (default = 0)", &uni, 0);
 //   cmdline.add("-experiments","name of experiments spec. file", 
 // 	      &experiments_file,"noExperimentsFile");
 
@@ -82,11 +83,13 @@ int main(int argc, char** argv) {
   // -------------------------------------------------------------
   // ---------------------- Experiments mode ---------------------
   // -------------------------------------------------------------
+  /*
   if (experiments_file != "noExperimentsFile") {
     run_experiments(experiments_file,Dataset,Labels,dimension,
 		    testDataset,testLabels);
     return(EXIT_SUCCESS); 
   }
+  */
 
 
   // -------------------------------------------------------------
@@ -94,29 +97,39 @@ int main(int argc, char** argv) {
   // -------------------------------------------------------------
   long trainTime,calc_obj_time;
   double obj_value,norm_value,loss_value,zero_one_error,test_loss,test_error;
-  /*
-  Learn(Dataset,Labels,dimension,testDataset,testLabels,
-	lambda,max_iter,exam_per_iter,
-	num_iter_to_avg,model_filename,
-	trainTime,calc_obj_time,obj_value,norm_value,loss_value,zero_one_error,
-	test_loss,test_error,
-	0,0.0,0,0.0);
-  uint num_example_to_validate = max_iter/10;
-  LearnAndValidate(Dataset,Labels,dimension,testDataset,testLabels,
-		   lambda,max_iter,exam_per_iter,
-		   num_example_to_validate,model_filename,
-		   trainTime,calc_obj_time,obj_value,norm_value,
-		   loss_value,zero_one_error,
-		   test_loss,test_error,
-		   0,0.0,0,0.0);
-  */
+
   LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
 		   lambda,max_iter,exam_per_iter,
-		   model_filename,
+		   model_filename, 0, 
 		   trainTime,calc_obj_time,obj_value,norm_value,
 		   loss_value,zero_one_error,
 		   test_loss,test_error,
 		   0,0.0,0,0.0);
+
+  // -------------------------------------------------------------
+  // ---------------------- Print Results ------------------------
+  // -------------------------------------------------------------
+  std::cout << trainTime << " = Time for training\n" 
+	    << calc_obj_time << " = Time for calculate objective\n" 
+	    << norm_value  << " = Norm of solution\n" 
+	    << loss_value << " = avg Loss of solution\n"  
+	    << zero_one_error  << " = avg zero-one error of solution\n" 
+	    << obj_value << " = primal objective of solution\n" 
+	    << test_loss << " = avg Loss over test\n"  
+	    << test_error  << " = avg zero-one error over test\n" 	    
+	    <<  std::endl;
+
+
+ 
+
+   LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
+		   lambda,max_iter,exam_per_iter,
+		   model_filename, 1, 
+		   trainTime,calc_obj_time,obj_value,norm_value,
+		   loss_value,zero_one_error,
+		   test_loss,test_error,
+		   0,0.0,0,0.0);
+ 
  
   // -------------------------------------------------------------
   // ---------------------- Print Results ------------------------

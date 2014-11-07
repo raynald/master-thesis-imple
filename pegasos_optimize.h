@@ -29,51 +29,17 @@
 long get_runtime(void);
 
 // main optimization function
-void Learn(// Input variables
-	   std::vector<simple_sparse_vector>& Dataset,
-	   std::vector<int>& Labels,
-	   uint dimension,
-	   std::vector<simple_sparse_vector>& testDataset,
-	   std::vector<int>& testLabels,
-	   double lambda,int max_iter,int exam_per_iter,int num_iter_to_avg,
-	   std::string& model_filename,
-	   // Output variables
-	   long& train_time,long& calc_obj_time,double& obj_value,
-	   double& norm_value,double& loss_value,double& zero_one_error,
-	   double& test_loss,double& test_error,
-	   // additional parameters
-	   int eta_rule_type, double eta_constant,
-	   int projection_rule, double projection_constant);
-
-
-void LearnAndValidate(// Input variables
-		      std::vector<simple_sparse_vector>& Dataset,
-		      std::vector<int>& Labels,
-		      uint dimension,
-		      std::vector<simple_sparse_vector>& testDataset,
-		      std::vector<int>& testLabels,
-		      double lambda,int max_iter,
-		      int exam_per_iter,int num_example_to_validate,
-		      std::string& model_filename,
-		      // Output variables
-		      long& train_time,long& calc_obj_time,
-		      double& obj_value,double& norm_value,
-		      double& loss_value,double& zero_one_error,
-		      double& test_loss,double& test_error,
-		      // additional parameters
-		      int eta_rule_type , double eta_constant ,
-		      int projection_rule, double projection_constant);
-
 
 void LearnReturnLast(// Input variables
-		      std::vector<simple_sparse_vector>& Dataset,
-		      std::vector<int>& Labels,
+		      std::vector<simple_sparse_vector> Dataset,
+		      std::vector<int> Labels,
 		      uint dimension,
-		      std::vector<simple_sparse_vector>& testDataset,
-		      std::vector<int>& testLabels,
+		      std::vector<simple_sparse_vector> testDataset,
+		      std::vector<int> testLabels,
 		      double lambda,int max_iter,
 		      int exam_per_iter,
 		      std::string& model_filename,
+              bool uniform, 
 		      // Output variables
 		      long& train_time,long& calc_obj_time,
 		      double& obj_value,double& norm_value,
