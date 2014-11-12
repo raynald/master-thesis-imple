@@ -234,10 +234,13 @@ void ReadData(// input
         std::istringstream is(buf);
         int label = 0;
         is >> label;
+        /*
         if (label != 1 && label != -1) {
             std::cerr << "Error reading SVM-light format. Abort." << std::endl;
             exit(EXIT_FAILURE);
         }
+        */
+        if(label==0) label=-1;
         Labels.push_back(label);
         simple_sparse_vector instance(is,n);
         Dataset.push_back(instance);
