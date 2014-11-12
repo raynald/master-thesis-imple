@@ -38,7 +38,7 @@ void LearnReturnLast(// Input variables
         double lambda,int max_iter,
         int exam_per_iter,
         std::string& model_filename,
-        bool uniform,
+        std::vector<double> &p,
         // Output variables
         long& train_time,long& calc_obj_time,
         double& obj_value,double& norm_value,
@@ -52,33 +52,6 @@ void LearnReturnLast(// Input variables
 
     long startTime = get_runtime();
     long endTime;
-
-    //Calculate all the p_i
-    std::vector<double> p;
-    p.clear();
-    double sumup = 0;
-
-    for (uint i = 0; i < num_examples; ++i) {
-        Dataset[i].scale(rand()%10);
-    }
-    if(!uniform) {
-        //for non-uniform sampling
-        for (uint i = 0; i < num_examples; ++i) {
-            p.push_back(sqrt(Dataset[i].snorm()));
-            sumup += p[i];
-        }
-    }
-    else {
-        //for unifrom sampling
-        for (uint i = 0; i < num_examples; ++i) {
-            p.push_back(1);
-            sumup ++;
-        }
-    }
-    for (uint i = 0; i < num_examples; ++i) {
-        p[i] /= sumup;
-    }
-
 
     // Initialization of classification vector
     WeightVector W(dimension);

@@ -39,7 +39,7 @@ void LearnReturnLast(// Input variables
 		      double lambda,int max_iter,
 		      int exam_per_iter,
 		      std::string& model_filename,
-              bool uniform, 
+              std::vector<double> &p,
 		      // Output variables
 		      long& train_time,long& calc_obj_time,
 		      double& obj_value,double& norm_value,
