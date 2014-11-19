@@ -2,8 +2,8 @@
 # Makefile for sparse pegasos
 ##########################################################################
 
-HDR = simple_sparse_vec_hash.h WeightVector.h pegasos_optimize.h
-SRC = simple_sparse_vec_hash.cc  WeightVector.cc pegasos_optimize.cc cmd_line.cc
+HDR = simple_sparse_vec_hash.h WeightVector.h optimize.h
+SRC = simple_sparse_vec_hash.cc  WeightVector.cc optimize.cc cmd_line.cc
 
 CC = g++
 
@@ -14,13 +14,13 @@ LFLAGS  = -lm
 
 OBJS = $(SRC:.cc=.o)
 
-all: pegasos test_objective
+all: optimize test_objective
 
 test_objective: $(OBJS) test_objective.o
 	$(CC) $(OBJS) test_objective.o $(LFLAGS) -o test_objective
 
-pegasos: $(OBJS) main.o
-	$(CC) $(OBJS) main.o $(LFLAGS) -o pegasos
+optimize: $(OBJS) main.o
+	$(CC) $(OBJS) main.o $(LFLAGS) -o optimize 
 
 tar: $(SRC) $(HDR) Makefile 
 	tar zcvf pegasos.tgz *.cc *.h Makefile license.txt README data.tgz
@@ -29,4 +29,4 @@ tar: $(SRC) $(HDR) Makefile
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f *.o *.od *.oc *~ \#*\# depend pegasos pegasos.exe test_objective.exe
+	rm -f *.o *.od *.oc *~ \#*\# depend optimize

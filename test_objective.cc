@@ -8,7 +8,7 @@
 
 #include "cmd_line.h"
 #include "simple_sparse_vec_hash.h"
-#include "pegasos_optimize.h"
+#include "optimize.h"
 
 int main(int argc, char** argv) {
 

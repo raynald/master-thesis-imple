@@ -7,7 +7,7 @@
 // implements the main optimization function of pegasos
 //=============================================================================
 
-#include "pegasos_optimize.h"
+#include "optimize.h"
 
 // help function for getting runtime
 long get_runtime(void) {

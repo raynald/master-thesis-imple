@@ -17,7 +17,7 @@
 //*****************************************************************************
 #include "cmd_line.h"
 #include "simple_sparse_vec_hash.h"
-#include "pegasos_optimize.h"
+#include "optimize.h"
 
 
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
     // parse command line
     learning::cmd_line cmdline;
-    cmdline.info("Pegasos algorithm");
+    cmdline.info("Non-uniform SGD and SDCA algorithm");
     cmdline.add_master_option("<data-file>", &data_filename);
     cmdline.add("-lambda", "regularization parameter (default = 0.01)", &lambda, 0.001);
     cmdline.add("-iter", "number of iterations (default = 10/lambda)", &max_iter, int(100/lambda));
