@@ -1,17 +1,3 @@
-// Distributed under GNU General Public License (see license.txt for details).
-//
-//  Copyright (c) 2007 Shai Shalev-Shwartz.
-//  All Rights Reserved.
-//
-// Main for the PEGASOS algorithm.
-//
-//
-// 
-// Pegasos: Fly high in the primal 
-// main file
-//
-// 
-
 //*****************************************************************************
 // Included Files
 //*****************************************************************************
@@ -57,8 +43,7 @@ int main(int argc, char** argv) {
     }
 
     // -------------------------------------------------------------
-    // ---------------------- read the data ------------------------
-    // -------------------------------------------------------------
+    // ---------------------- read the data ------------------------ // ------------------------------------------------------------- 
     uint dimension = 0;
     std::vector<simple_sparse_vector> Dataset;
     std::vector<int> Labels;
@@ -96,7 +81,7 @@ int main(int argc, char** argv) {
     // -------------------------------------------------------------
     long trainTime,calc_obj_time;
     double obj_value,norm_value,loss_value,zero_one_error,test_loss,test_error;
-    const int ROUND = 100;
+    const int ROUND = 1;
     double total_obj = 0, total_terr = 0;
 
     //Calculate all the p_i

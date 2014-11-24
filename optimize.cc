@@ -53,12 +53,32 @@ void LearnReturnLast(// Input variables
     long startTime = get_runtime();
     long endTime;
 
+    double chiv[num_examples];
+    double sumup;
+    uint chiv_size[num_examples];
+
+    memset(chiv_size, 0, sizeof(chiv_size));
+
     // Initialization of classification vector
     WeightVector W(dimension);
 
     // ---------------- Main Loop -------------------
+    max_iter = 10 * num_examples;
+    std::cout << max_iter<<std::endl;
     for (int i = 0; i < max_iter; ++i) {
 
+        if ((i+1) % num_examples == 0) {
+            //begin of each epoch, update p
+            sumup = 0;
+            for(uint j=0; j<num_examples; j++) {
+                p[j] = chiv[j];
+                sumup += chiv[j];
+                chiv_size[j] = 0;
+            }
+            for(uint j=0; j<num_examples; j++) {
+                p[j] /= sumup;
+            }
+        }
         // learning rate
         double eta;
         if (eta_rule_type == 0) { // Pegasos eta rule
@@ -95,6 +115,15 @@ void LearnReturnLast(// Input variables
             grad_index.push_back(r);
             grad_weights.push_back(eta*Labels[r]/exam_per_iter/num_examples/p[r]);
         }
+        simple_sparse_vector tmp1 = W;
+        simple_sparse_vector tmp2 = Dataset[r];
+        tmp1.scale(lambda);
+        tmp2.scale(Labels[r]);
+        tmp1 = tmp1 - tmp2;
+        tmp1.scale(eta/num_examples/p[r]);
+        double temp = sqrt(tmp1.snorm());
+        chiv[r] = (chiv[r]*chiv_size[r]+temp)/(chiv_size[r]+1);
+        chiv_size[r]++;
         //}
 
         // scale w 

@@ -168,6 +168,8 @@ double operator* (simple_sparse_vector& u, simple_hash_table& v);
 */
 double operator* (simple_hash_table& u, simple_sparse_vector& v);
 
+simple_sparse_vector operator+ (simple_hash_table& u, simple_sparse_vector& v);
+
 #endif
 
 #endif

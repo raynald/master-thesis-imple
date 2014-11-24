@@ -20,6 +20,7 @@
 #include <vector>
 #include <sstream>
 #include <ctime>
+#include <cstring>
 #include <cmath>
 #include "simple_sparse_vec_hash.h"
 #include "WeightVector.h"

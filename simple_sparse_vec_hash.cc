@@ -27,6 +27,7 @@ simple_sparse_vector::simple_sparse_vector(std::istream& is) : my_vec() {
     is >> key;
     double val;
     is >> val;
+    val = 1;
 
     // insert to the map
     my_vec.push_back(IndexValuePair(key,val));
@@ -48,6 +49,7 @@ simple_sparse_vector::simple_sparse_vector(std::istringstream& is,int n) : my_ve
     is >> key;
     double val;
     is >> val;
+    val = 1;
 
     // insert to the map
     my_vec.push_back(IndexValuePair(key,val));
@@ -116,7 +118,16 @@ void simple_sparse_vector::print(std::ostream& os) {
   os << std::endl;
 }
 /*---------------------------------------------------------------------------*/
+/*
+void simple_sparse_vector::print() {
 
+  for(simple_sparse_vector_iterator it = my_vec.begin(); 
+      it != my_vec.end(); it++) {
+    cin << "(" << (*it).first << "," << (*it).second << ") "; 
+  }
+  cin << std::endl;
+}
+*/
 /*---------------------------------------------------------------------------*/
 void simple_sparse_vector::zero() {
   my_vec.clear();
@@ -270,7 +281,13 @@ double operator* (simple_hash_table& u, simple_sparse_vector& v) {
   return(output);
 }
 /*---------------------------------------------------------------------------*/
-
+simple_sparse_vector operator- (simple_sparse_vector& u, simpel_sparse_vector &v) {
+  simple_sparse_vector &t;
+  for(uint i = 0; i< t.size();i ++) {
+      t[i] = u[i] - v[i];
+  }
+  return t;
+}
 /*---------------------------------------------------------------------------*/
 double operator* (simple_sparse_vector& u, simple_hash_table& v) { 
   return(v*u); 
