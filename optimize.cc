@@ -39,6 +39,7 @@ void LearnReturnLast(// Input variables
         int exam_per_iter,
         std::string& model_filename,
         std::vector<double> &p,
+        bool change, 
         // Output variables
         long& train_time,long& calc_obj_time,
         double& obj_value,double& norm_value,
@@ -57,7 +58,10 @@ void LearnReturnLast(// Input variables
     double sumup;
     uint chiv_size[num_examples];
 
-    memset(chiv_size, 0, sizeof(chiv_size));
+    for(uint i=0;i<num_examples;i++) {
+        chiv[i] = 0;//1.0/num_examples;
+        chiv_size[i] = 0;
+    }
 
     // Initialization of classification vector
     WeightVector W(dimension);
@@ -67,7 +71,7 @@ void LearnReturnLast(// Input variables
     std::cout << max_iter<<std::endl;
     for (int i = 0; i < max_iter; ++i) {
 
-        if ((i+1) % num_examples == 0) {
+        if (change && (i+1) % num_examples == 0) {
             //begin of each epoch, update p
             sumup = 0;
             for(uint j=0; j<num_examples; j++) {
@@ -75,6 +79,7 @@ void LearnReturnLast(// Input variables
                 sumup += chiv[j];
                 chiv_size[j] = 0;
             }
+            std::cout << "fu"<<sumup <<std::endl;
             for(uint j=0; j<num_examples; j++) {
                 p[j] /= sumup;
             }
@@ -115,11 +120,12 @@ void LearnReturnLast(// Input variables
             grad_index.push_back(r);
             grad_weights.push_back(eta*Labels[r]/exam_per_iter/num_examples/p[r]);
         }
-        simple_sparse_vector tmp1 = W;
+        WeightVector tmp1(dimension);
+        tmp1 = W;
         simple_sparse_vector tmp2 = Dataset[r];
         tmp1.scale(lambda);
-        tmp2.scale(Labels[r]);
-        tmp1 = tmp1 - tmp2;
+        //tmp2.scale(Labels[r]);
+        tmp1.add(tmp2, Labels[r]);
         tmp1.scale(eta/num_examples/p[r]);
         double temp = sqrt(tmp1.snorm());
         chiv[r] = (chiv[r]*chiv_size[r]+temp)/(chiv_size[r]+1);

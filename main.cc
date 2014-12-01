@@ -105,14 +105,15 @@ int main(int argc, char** argv) {
     std::cout << "Norm variance = " << variance << std::endl;
 
     for (uint i = 0; i < num_examples; ++i) {
-        p[i] /= sumup;
+       // p[i] /= sumup;
+        p[i] = 1.0/ num_examples;
     }
 
 
     for(int rounds = 1; rounds <= ROUND; rounds++) {
         LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
                 lambda,max_iter,exam_per_iter,
-                model_filename, p,
+                model_filename, p, 1, 
                 trainTime,calc_obj_time,obj_value,norm_value,
                 loss_value,zero_one_error,
                 test_loss,test_error,
@@ -144,7 +145,7 @@ int main(int argc, char** argv) {
     for(int rounds = 1; rounds <= ROUND; rounds++) {
         LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
                 lambda,max_iter,exam_per_iter,
-                model_filename, p,
+                model_filename, p, 0,
                 trainTime,calc_obj_time,obj_value,norm_value,
                 loss_value,zero_one_error,
                 test_loss,test_error,

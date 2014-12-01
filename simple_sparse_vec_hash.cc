@@ -280,7 +280,9 @@ double operator* (simple_hash_table& u, simple_sparse_vector& v) {
 
   return(output);
 }
+
 /*---------------------------------------------------------------------------*/
+/*
 simple_sparse_vector operator- (simple_sparse_vector& u, simpel_sparse_vector &v) {
   simple_sparse_vector &t;
   for(uint i = 0; i< t.size();i ++) {
@@ -288,10 +290,14 @@ simple_sparse_vector operator- (simple_sparse_vector& u, simpel_sparse_vector &v
   }
   return t;
 }
+*/
+
 /*---------------------------------------------------------------------------*/
+
 double operator* (simple_sparse_vector& u, simple_hash_table& v) { 
   return(v*u); 
 }
+
 /*---------------------------------------------------------------------------*/
 
 #endif
