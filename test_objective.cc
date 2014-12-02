@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   std::vector<simple_sparse_vector> Dataset;
   std::vector<int> Labels;
   long readingTime;
-  ReadData(data_filename,Dataset,Labels,dimension,readingTime);
+  mod.ReadData(data_filename,Dataset,Labels,dimension,readingTime);
 
 
   // read weight vector

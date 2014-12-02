@@ -48,14 +48,16 @@ int main(int argc, char** argv) {
     std::vector<simple_sparse_vector> Dataset;
     std::vector<int> Labels;
     long readingTime;
-    ReadData(data_filename,Dataset,Labels,dimension,readingTime);
+    Model mod;
+
+    mod.ReadData(data_filename,Dataset,Labels,dimension,readingTime);
 
     uint testDimension = 0;
     std::vector<simple_sparse_vector> testDataset;
     std::vector<int> testLabels;
     long testReadingTime;
     if (test_filename != "noTestFile") {
-        ReadData(test_filename,testDataset,testLabels,testDimension,testReadingTime);
+        mod.ReadData(test_filename,testDataset,testLabels,testDimension,testReadingTime);
     } else {
         testReadingTime = 0;
     }
@@ -81,7 +83,6 @@ int main(int argc, char** argv) {
     // -------------------------------------------------------------
     long trainTime,calc_obj_time;
     double obj_value,norm_value,loss_value,zero_one_error,test_loss,test_error;
-    const int ROUND = 1;
     double total_obj = 0, total_terr = 0;
 
     //Calculate all the p_i
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
 
     //for non-uniform sampling
     for (uint i = 0; i < num_examples; ++i) {
-        p.push_back(sqrt(Dataset[i].snorm()));
+        p.push_back(sqrt(Dataset[i].snorm())+sqrt(lambda));
         sumup += p[i];
     }
     average = sumup / num_examples;
@@ -105,34 +106,20 @@ int main(int argc, char** argv) {
     std::cout << "Norm variance = " << variance << std::endl;
 
     for (uint i = 0; i < num_examples; ++i) {
-       // p[i] /= sumup;
-        p[i] = 1.0/ num_examples;
+        p[i] /= sumup;
+        //p[i] = 1.0/ num_examples;
     }
 
 
-    for(int rounds = 1; rounds <= ROUND; rounds++) {
-        LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
-                lambda,max_iter,exam_per_iter,
-                model_filename, p, 1, 
-                trainTime,calc_obj_time,obj_value,norm_value,
-                loss_value,zero_one_error,
-                test_loss,test_error,
-                0,0.0,0,0.0);
-        total_obj = total_obj + obj_value;
-        total_terr = total_terr + test_error;
-
-    }
-
-    //std::cout << trainTime / ROUND << " = Time for training\n" 
-    //      << calc_obj_time / ROUND  << " = Time for calculate objective\n" 
-    //      << norm_value / ROUND  << " = Norm of solution\n" 
-    //      << loss_value / ROUND << " = avg Loss of solution\n"  
-    //      << zero_one_error / ROUND  << " = avg zero-one error of solution\n" 
-    std::cout << total_obj / ROUND << " = primal objective of solution\n" 
-        //<< test_loss / ROUND << " = avg Loss over test\n"  
-        << total_terr / ROUND  << " = avg zero-one error over test\n" 	    
-        <<  std::endl;
-
+    mod.LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter,exam_per_iter,
+            model_filename, p, 1, 
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            0,0.0,0,0.0);
+    total_obj = total_obj + obj_value;
+    total_terr = total_terr + test_error;
 
     p.clear();
     //for unifrom sampling
@@ -142,28 +129,15 @@ int main(int argc, char** argv) {
 
     total_obj = 0;
     total_terr = 0;
-    for(int rounds = 1; rounds <= ROUND; rounds++) {
-        LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
-                lambda,max_iter,exam_per_iter,
-                model_filename, p, 0,
-                trainTime,calc_obj_time,obj_value,norm_value,
-                loss_value,zero_one_error,
-                test_loss,test_error,
-                0,0.0,0,0.0);
-        total_obj = total_obj + obj_value;
-        total_terr = total_terr + test_error;
-    }
-
-
-    //std::cout << trainTime / ROUND << " = Time for training\n" 
-    //      << calc_obj_time / ROUND  << " = Time for calculate objective\n" 
-    //      << norm_value / ROUND  << " = Norm of solution\n" 
-    //      << loss_value / ROUND << " = avg Loss of solution\n"  
-    //      << zero_one_error / ROUND  << " = avg zero-one error of solution\n" 
-    std::cout << total_obj / ROUND << " = primal objective of solution\n" 
-        //<< test_loss / ROUND << " = avg Loss over test\n"  
-        << total_terr / ROUND  << " = avg zero-one error over test\n" 	    
-        <<  std::endl;
+    mod.LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter,exam_per_iter,
+            model_filename, p, 0,
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            0,0.0,0,0.0);
+    total_obj = total_obj + obj_value;
+    total_terr = total_terr + test_error;
 
     return(EXIT_SUCCESS);
 }

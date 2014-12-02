@@ -1,9 +1,5 @@
-// Distributed under GNU General Public License (see license.txt for details).
-//
-//  Copyright (c) 2007 Shai Shalev-Shwartz.
-//  All Rights Reserved.
 //=============================================================================
-// File Name: pegasos_optimize.h
+// File Name: optimize.h
 // header for the main optimization function of pegasos
 //=============================================================================
 
@@ -31,7 +27,10 @@ long get_runtime(void);
 
 // main optimization function
 
-void LearnReturnLast(// Input variables
+class Model {
+    public:
+        // main optimization function
+        void LearnReturnLast(// Input variables
 		      std::vector<simple_sparse_vector> Dataset,
 		      std::vector<int> Labels,
 		      uint dimension,
@@ -51,25 +50,23 @@ void LearnReturnLast(// Input variables
 		      int eta_rule_type , double eta_constant ,
 		      int projection_rule, double projection_constant);
 
+        // function for reading the data
+        void ReadData(// input
+                std::string& data_filename,
+                // output
+                std::vector<simple_sparse_vector> & Dataset,
+                std::vector<int> & Labels,
+                uint& dimension,
+                long& readingTime);
 
-
-// function for reading the data
-void ReadData(// input
-	      std::string& data_filename,
-	      // output
-	      std::vector<simple_sparse_vector> & Dataset,
-	      std::vector<int> & Labels,
-	      uint& dimension,
-	      long& readingTime);
-
-
-// function for running experiments
-void run_experiments(std::string& experiments_file,
-		     std::vector<simple_sparse_vector>& Dataset,
-		     std::vector<int>& Labels,
-		     uint dimension,
-		     std::vector<simple_sparse_vector>& testDataset,
-		     std::vector<int>& testLabels);
-
-
+        // function for running experiments
+        /*
+        void run_experiments(std::string& experiments_file,
+                std::vector<simple_sparse_vector>& Dataset,
+                std::vector<int>& Labels,
+                uint dimension,
+                std::vector<simple_sparse_vector>& testDataset,
+                std::vector<int>& testLabels);
+        */
+};
 #endif

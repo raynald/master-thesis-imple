@@ -1,13 +1,11 @@
-// Distributed under GNU General Public License (see license.txt for details).
-//
-//  Copyright (c) 2007 Shai Shalev-Shwartz.
-//  All Rights Reserved.
 //=============================================================================
-// File Name: pegasos_optimize.cc
-// implements the main optimization function of pegasos
+// File Name: optimize.cc
+// implements the main optimization function
 //=============================================================================
 
 #include "optimize.h"
+
+using namespace std;
 
 // help function for getting runtime
 long get_runtime(void) {
@@ -15,7 +13,6 @@ long get_runtime(void) {
     start = clock();
     return((long)((double)start/(double)CLOCKS_PER_SEC));
 }
-
 
 uint get_sample(std::vector<double> &p) {
     double x = rand() * 1.0 / RAND_MAX;
@@ -29,7 +26,7 @@ uint get_sample(std::vector<double> &p) {
 // ---------------- OPTIMIZING --------------------------------//
 // ------------------------------------------------------------//
 
-void LearnReturnLast(// Input variables
+void Model::LearnReturnLast(// Input variables
         std::vector<simple_sparse_vector> Dataset,
         std::vector<int> Labels,
         uint dimension,
@@ -54,130 +51,114 @@ void LearnReturnLast(// Input variables
     long startTime = get_runtime();
     long endTime;
 
-    double chiv[num_examples];
-    double sumup;
-    uint chiv_size[num_examples];
-
-    for(uint i=0;i<num_examples;i++) {
-        chiv[i] = 0;//1.0/num_examples;
-        chiv_size[i] = 0;
-    }
+    //double chiv[num_examples];
+    const int ROUND = 10;
+    double t;
+    double sumup=0;
+    double cur_loss;
 
     // Initialization of classification vector
     WeightVector W(dimension);
-
     // ---------------- Main Loop -------------------
-    max_iter = 10 * num_examples;
-    std::cout << max_iter<<std::endl;
-    for (int i = 0; i < max_iter; ++i) {
-
-        if (change && (i+1) % num_examples == 0) {
-            //begin of each epoch, update p
-            sumup = 0;
-            for(uint j=0; j<num_examples; j++) {
-                p[j] = chiv[j];
-                sumup += chiv[j];
-                chiv_size[j] = 0;
+    max_iter = num_examples;
+    t = 0;
+    for(int epoch = 1;epoch <= ROUND; epoch++) {
+        for (int i = 0;i< max_iter ;++i) {
+            // learning rate
+            double eta;
+            t ++;
+            if (eta_rule_type == 0) { // Pegasos eta rule
+                eta = 1 / (lambda * (t+2)); 
+            } else if (eta_rule_type == 1) { // Norma rule
+                eta = eta_constant / sqrt(t+2);
+                // solve numerical problems
+                //if (projection_rule != 2)
+                W.make_my_a_one();
+            } else {
+                eta = eta_constant;
             }
-            std::cout << "fu"<<sumup <<std::endl;
-            for(uint j=0; j<num_examples; j++) {
+
+            // choose random example
+            uint r = get_sample(p);
+
+            // calculate prediction
+            double prediction = W * Dataset[r];
+
+            // calculate loss
+            cur_loss = 1 - Labels[r]*prediction;
+            if (cur_loss < 0.0) cur_loss = 0.0;
+
+            // scale w 
+            W.scale(1.0 - eta*lambda/num_examples/p[r]);
+
+            // and add to the gradient
+            if (cur_loss > 0.0) {
+                double grad_weights = eta*Labels[r]/num_examples/p[r];
+                // and add sub-gradients
+                W.add(Dataset[r],grad_weights);
+            }
+       }
+
+        // update timeline
+        endTime = get_runtime();
+        train_time = endTime - startTime;
+        startTime = get_runtime();
+
+        // Calculate objective value
+        norm_value = W.snorm();
+        obj_value = norm_value * lambda / 2.0;
+        loss_value = 0.0;
+        zero_one_error = 0.0;
+        for (uint i=0; i < Dataset.size(); ++i) {
+            double cur_loss = 1 - Labels[i]*(W * Dataset[i]); 
+            if (cur_loss < 0.0) cur_loss = 0.0;
+            loss_value += cur_loss/num_examples;
+            obj_value += cur_loss/num_examples;
+            if (cur_loss >= 1.0) zero_one_error += 1.0/num_examples;
+        }
+
+        endTime = get_runtime();
+        calc_obj_time = endTime - startTime;
+
+        // Calculate test_loss and test_error
+        test_loss = 0.0;
+        test_error = 0.0;
+        for (uint i=0; i < testDataset.size(); ++i) {
+            double cur_loss = 1 - testLabels[i]*(W * testDataset[i]); 
+            if (cur_loss < 0.0) cur_loss = 0.0;
+            test_loss += cur_loss;
+            if (cur_loss >= 1.0) test_error += 1.0;
+        }
+        if (testDataset.size() != 0) {
+            test_loss /= testDataset.size();
+            test_error /= testDataset.size();
+        }
+
+        std::cout << obj_value<< " = primal objective of solution\n" 
+            << test_error << " = avg zero-one error over test\n" 	    
+            <<  std::endl;
+
+        if(change) {
+            WeightVector old_W(dimension);
+
+            sumup = 0;
+            for(uint j=0;j<num_examples;j++) {
+                double prediction = W * Dataset[j];
+                cur_loss = 1 - Labels[j]*prediction;
+                if (cur_loss < 0.0) cur_loss = 0.0;
+                old_W = W;
+                old_W.scale(lambda);
+                if(cur_loss > 0.0) {
+                    old_W.add(Dataset[j], -Labels[j]);
+                }
+                p[j] = sqrt(old_W.snorm());
+                sumup += p[j];
+            }
+            for(uint j=0;j<num_examples;j++) {
                 p[j] /= sumup;
             }
         }
-        // learning rate
-        double eta;
-        if (eta_rule_type == 0) { // Pegasos eta rule
-            eta = 1 / (lambda * (i+2)); 
-        } else if (eta_rule_type == 1) { // Norma rule
-            eta = eta_constant / sqrt(i+2);
-            // solve numerical problems
-            //if (projection_rule != 2)
-            W.make_my_a_one();
-        } else {
-            eta = eta_constant;
-        }
-
-        // gradient indices and losses
-        std::vector<uint> grad_index;
-        std::vector<double> grad_weights;
-
-        // calc sub-gradients
-        //for (int j=0; j < exam_per_iter; ++j) {
-
-        // choose random example
-        uint r = get_sample(p);
-        //((int)rand()) % num_examples;
-
-        // calculate prediction
-        double prediction = W*Dataset[r];
-
-        // calculate loss
-        double cur_loss = 1 - Labels[r]*prediction;
-        if (cur_loss < 0.0) cur_loss = 0.0;
-
-        // and add to the gradient
-        if (cur_loss > 0.0) {
-            grad_index.push_back(r);
-            grad_weights.push_back(eta*Labels[r]/exam_per_iter/num_examples/p[r]);
-        }
-        WeightVector tmp1(dimension);
-        tmp1 = W;
-        simple_sparse_vector tmp2 = Dataset[r];
-        tmp1.scale(lambda);
-        //tmp2.scale(Labels[r]);
-        tmp1.add(tmp2, Labels[r]);
-        tmp1.scale(eta/num_examples/p[r]);
-        double temp = sqrt(tmp1.snorm());
-        chiv[r] = (chiv[r]*chiv_size[r]+temp)/(chiv_size[r]+1);
-        chiv_size[r]++;
-        //}
-
-        // scale w 
-        W.scale(1.0 - eta*lambda/num_examples/p[r]);
-
-        // and add sub-gradients
-        for (uint j=0; j<grad_index.size(); ++j) {
-            W.add(Dataset[grad_index[j]],grad_weights[j]);
-        }
     }
-
-
-    // update timeline
-    endTime = get_runtime();
-    train_time = endTime - startTime;
-    startTime = get_runtime();
-
-    // Calculate objective value
-    norm_value = W.snorm();
-    obj_value = norm_value * lambda / 2.0;
-    loss_value = 0.0;
-    zero_one_error = 0.0;
-    for (uint i=0; i < Dataset.size(); ++i) {
-        double cur_loss = 1 - Labels[i]*(W * Dataset[i]); 
-        if (cur_loss < 0.0) cur_loss = 0.0;
-        loss_value += cur_loss/num_examples;
-        obj_value += cur_loss/num_examples;
-        if (cur_loss >= 1.0) zero_one_error += 1.0/num_examples;
-    }
-
-    endTime = get_runtime();
-    calc_obj_time = endTime - startTime;
-
-    // Calculate test_loss and test_error
-    test_loss = 0.0;
-    test_error = 0.0;
-    for (uint i=0; i < testDataset.size(); ++i) {
-        double cur_loss = 1 - testLabels[i]*(W * testDataset[i]); 
-        if (cur_loss < 0.0) cur_loss = 0.0;
-        test_loss += cur_loss;
-        if (cur_loss >= 1.0) test_error += 1.0;
-    }
-    if (testDataset.size() != 0) {
-        test_loss /= testDataset.size();
-        test_error /= testDataset.size();
-    }
-
-
 
     // finally, print the model to the model_file
     if (model_filename != "noModelFile") {
@@ -189,7 +170,6 @@ void LearnReturnLast(// Input variables
         W.print(model_file);
         model_file.close();
     }
-
 }
 
 
@@ -198,7 +178,7 @@ void LearnReturnLast(// Input variables
 // ------------------------------------------------------------//
 // ---------------- READING DATA ------------------------------//
 // ------------------------------------------------------------//
-void ReadData(// input
+void Model::ReadData(// input
         std::string& data_filename,
         // output
         std::vector<simple_sparse_vector> & Dataset,
@@ -243,11 +223,11 @@ void ReadData(// input
         int label = 0;
         is >> label;
         /*
-        if (label != 1 && label != -1) {
-            std::cerr << "Error reading SVM-light format. Abort." << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        */
+           if (label != 1 && label != -1) {
+           std::cerr << "Error reading SVM-light format. Abort." << std::endl;
+           exit(EXIT_FAILURE);
+           }
+           */
         if(label==0) label=-1;
         Labels.push_back(label);
         simple_sparse_vector instance(is,n);

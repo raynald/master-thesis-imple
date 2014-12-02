@@ -14,10 +14,11 @@ LFLAGS  = -lm
 
 OBJS = $(SRC:.cc=.o)
 
-all: optimize test_objective
+all: optimize 
+#test_objective
 
-test_objective: $(OBJS) test_objective.o
-	$(CC) $(OBJS) test_objective.o $(LFLAGS) -o test_objective
+#test_objective: $(OBJS) test_objective.o
+#	$(CC) $(OBJS) test_objective.o $(LFLAGS) -o test_objective
 
 optimize: $(OBJS) main.o
 	$(CC) $(OBJS) main.o $(LFLAGS) -o optimize 
