@@ -27,7 +27,7 @@
 class WeightVector {
   
  private:
-  WeightVector(const WeightVector&);// disallowed
+    WeightVector(const WeightVector&);// disallowed
   
  public:
 

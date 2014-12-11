@@ -1,7 +1,3 @@
-// Distributed under GNU General Public License (see license.txt for details).
-//
-//  Copyright (c) 2007 Shai Shalev-Shwartz.
-//  All Rights Reserved.
 //=============================================================================
 // File Name: WeightVector.cc
 // implements the methods of the WeightVector class

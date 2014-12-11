@@ -83,7 +83,6 @@ int main(int argc, char** argv) {
     // -------------------------------------------------------------
     long trainTime,calc_obj_time;
     double obj_value,norm_value,loss_value,zero_one_error,test_loss,test_error;
-    double total_obj = 0, total_terr = 0;
 
     //Calculate all the p_i
     std::vector<double> p;
@@ -103,6 +102,7 @@ int main(int argc, char** argv) {
         variance += (average-p[i])*(average-p[i]);
     }
     variance = variance / num_examples;
+    std::cout << "Norm average = " << average << std::endl;
     std::cout << "Norm variance = " << variance << std::endl;
 
     for (uint i = 0; i < num_examples; ++i) {
@@ -111,15 +111,30 @@ int main(int argc, char** argv) {
     }
 
 
-    mod.LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda,max_iter,exam_per_iter,
             model_filename, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0,0.0,0,0.0);
-    total_obj = total_obj + obj_value;
-    total_terr = total_terr + test_error;
+            0,0,0.0);
+
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter,exam_per_iter,
+            model_filename, p, 1, 
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            1,0,0.0);
+
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter,exam_per_iter,
+            model_filename, p, 1, 
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            2,0,0.0);
+
 
     p.clear();
     //for unifrom sampling
@@ -127,17 +142,29 @@ int main(int argc, char** argv) {
         p.push_back(1.0/num_examples);
     }
 
-    total_obj = 0;
-    total_terr = 0;
-    mod.LearnReturnLast(Dataset,Labels,dimension,testDataset,testLabels,
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda,max_iter,exam_per_iter,
             model_filename, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0,0.0,0,0.0);
-    total_obj = total_obj + obj_value;
-    total_terr = total_terr + test_error;
+            0,0,0.0);
+
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter,exam_per_iter,
+            model_filename, p, 0,
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            1,0,0.0);
+
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter,exam_per_iter,
+            model_filename, p, 0,
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            2,0,0.0);
 
     return(EXIT_SUCCESS);
 }

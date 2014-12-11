@@ -29,8 +29,8 @@ long get_runtime(void);
 
 class Model {
     public:
-        // main optimization function
-        void LearnReturnLast(// Input variables
+        // main optimization function for SGD
+        void SGDLearn(// Input variables
 		      std::vector<simple_sparse_vector> Dataset,
 		      std::vector<int> Labels,
 		      uint dimension,
@@ -47,7 +47,28 @@ class Model {
 		      double& loss_value,double& zero_one_error,
 		      double& test_loss,double& test_error,
 		      // additional parameters
-		      int eta_rule_type , double eta_constant ,
+		      int eta_rule_type ,
+		      int projection_rule, double projection_constant);
+
+        // main optimization function for SDCA
+        void SDCALearn(// Input variables
+		      std::vector<simple_sparse_vector> Dataset,
+		      std::vector<int> Labels,
+		      uint dimension,
+		      std::vector<simple_sparse_vector> testDataset,
+		      std::vector<int> testLabels,
+		      double lambda,int max_iter,
+		      int exam_per_iter,
+		      std::string& model_filename,
+              std::vector<double> &p,
+              bool change,
+		      // Output variables
+		      long& train_time,long& calc_obj_time,
+		      double& obj_value,double& norm_value,
+		      double& loss_value,double& zero_one_error,
+		      double& test_loss,double& test_error,
+		      // additional parameters
+		      int eta_rule_type ,
 		      int projection_rule, double projection_constant);
 
         // function for reading the data
@@ -59,14 +80,5 @@ class Model {
                 uint& dimension,
                 long& readingTime);
 
-        // function for running experiments
-        /*
-        void run_experiments(std::string& experiments_file,
-                std::vector<simple_sparse_vector>& Dataset,
-                std::vector<int>& Labels,
-                uint dimension,
-                std::vector<simple_sparse_vector>& testDataset,
-                std::vector<int>& testLabels);
-        */
 };
 #endif
