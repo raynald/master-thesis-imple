@@ -110,16 +110,7 @@ int main(int argc, char** argv) {
             lambda,max_iter, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error,
-            0);
-
-    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 1, 
-            trainTime,calc_obj_time,obj_value,norm_value,
-            loss_value,zero_one_error,
-            test_loss,test_error,
-            1);
-
+            test_loss,test_error);
 
     p.clear();
     //for unifrom sampling
@@ -145,16 +136,7 @@ int main(int argc, char** argv) {
             lambda,max_iter, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error,
-            0);
-
-    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 0,
-            trainTime,calc_obj_time,obj_value,norm_value,
-            loss_value,zero_one_error,
-            test_loss,test_error,
-            1);
-
+            test_loss,test_error);
 
     return(EXIT_SUCCESS);
 }

@@ -61,9 +61,7 @@ class Model {
 		      long& train_time,long& calc_obj_time,
 		      double& obj_value,double& norm_value,
 		      double& loss_value,double& zero_one_error,
-		      double& test_loss,double& test_error,
-		      // additional parameters
-		      int eta_rule_type);
+		      double& test_loss,double& test_error);
 
         // function for reading the data
         void ReadData(// input
