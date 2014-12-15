@@ -3,8 +3,8 @@
 // header for the main optimization function of pegasos
 //=============================================================================
 
-#ifndef _SHAI_PEGASOS_OPTIMIZE_H
-#define _SHAI_PEGASOS_OPTIMIZE_H
+#ifndef _OPTIMIZE_H
+#define _OPTIMIZE_H
 
 //*****************************************************************************
 // Included Files
@@ -37,8 +37,6 @@ class Model {
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
 		      double lambda,int max_iter,
-		      int exam_per_iter,
-		      std::string& model_filename,
               std::vector<double> &p,
               bool change,
 		      // Output variables
@@ -47,8 +45,7 @@ class Model {
 		      double& loss_value,double& zero_one_error,
 		      double& test_loss,double& test_error,
 		      // additional parameters
-		      int eta_rule_type ,
-		      int projection_rule, double projection_constant);
+		      int eta_rule_type);
 
         // main optimization function for SDCA
         void SDCALearn(// Input variables
@@ -58,8 +55,6 @@ class Model {
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
 		      double lambda,int max_iter,
-		      int exam_per_iter,
-		      std::string& model_filename,
               std::vector<double> &p,
               bool change,
 		      // Output variables
@@ -68,8 +63,7 @@ class Model {
 		      double& loss_value,double& zero_one_error,
 		      double& test_loss,double& test_error,
 		      // additional parameters
-		      int eta_rule_type ,
-		      int projection_rule, double projection_constant);
+		      int eta_rule_type);
 
         // function for reading the data
         void ReadData(// input

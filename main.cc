@@ -20,8 +20,6 @@ int main(int argc, char** argv) {
     std::string experiments_file = "noExperimentsFile";
     double lambda = 1.0;
     int max_iter = 10;
-    int exam_per_iter = 1;
-    //uint num_iter_to_avg = 100;
 
     // parse command line
     learning::cmd_line cmdline;
@@ -29,12 +27,7 @@ int main(int argc, char** argv) {
     cmdline.add_master_option("<data-file>", &data_filename);
     cmdline.add("-lambda", "regularization parameter (default = 0.01)", &lambda, 0.001);
     cmdline.add("-iter", "number of iterations (default = 10/lambda)", &max_iter, int(100/lambda));
-    cmdline.add("-k", "size of block for stochastic gradient (default = 1)", &exam_per_iter, 1);
-    cmdline.add("-modelFile","name of model file (default = noModelFile)", &model_filename,"noModelFile");
     cmdline.add("-testFile","name of test data file (default = noTestFile)", &test_filename,"noTestFile");
-    //cmdline.add("-uniform","test under uniform condition (default = 0)", &uni, 0);
-    //   cmdline.add("-experiments","name of experiments spec. file", 
-    // 	      &experiments_file,"noExperimentsFile");
 
     int rc = cmdline.parse(argc, argv);
     if (rc < 2) {
@@ -64,19 +57,7 @@ int main(int argc, char** argv) {
     std::cerr << readingTime+testReadingTime << " = Time for reading the data" <<  std::endl;
 
     // choose a random seed
-    srand(time(NULL));
-
-
-    // -------------------------------------------------------------
-    // ---------------------- Experiments mode ---------------------
-    // -------------------------------------------------------------
-    /*
-       if (experiments_file != "noExperimentsFile") {
-       run_experiments(experiments_file,Dataset,Labels,dimension,
-       testDataset,testLabels);
-       return(EXIT_SUCCESS); 
-       }
-       */
+    srand(20141010);
 
     // -------------------------------------------------------------
     // ---------------------- Main Learning function ---------------
@@ -112,28 +93,32 @@ int main(int argc, char** argv) {
 
 
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter,exam_per_iter,
-            model_filename, p, 1, 
+            lambda,max_iter, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0,0,0.0);
+            0);
 
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter,exam_per_iter,
-            model_filename, p, 1, 
+            lambda,max_iter, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            1,0,0.0);
+            1);
 
-    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter,exam_per_iter,
-            model_filename, p, 1, 
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            2,0,0.0);
+            0);
+
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter, p, 1, 
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            1);
 
 
     p.clear();
@@ -143,28 +128,33 @@ int main(int argc, char** argv) {
     }
 
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter,exam_per_iter,
-            model_filename, p, 0,
+            lambda,max_iter, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0,0,0.0);
+            0);
 
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter,exam_per_iter,
-            model_filename, p, 0,
+            lambda,max_iter, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            1,0,0.0);
+            1);
 
-    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter,exam_per_iter,
-            model_filename, p, 0,
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            2,0,0.0);
+            0);
+
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda,max_iter, p, 0,
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            1);
+
 
     return(EXIT_SUCCESS);
 }
