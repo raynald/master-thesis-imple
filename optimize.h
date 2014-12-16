@@ -36,7 +36,7 @@ class Model {
 		      uint dimension,
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
-		      double lambda,int max_iter,
+		      double lambda,
               std::vector<double> &p,
               bool change,
 		      // Output variables
@@ -45,7 +45,7 @@ class Model {
 		      double& loss_value,double& zero_one_error,
 		      double& test_loss,double& test_error,
 		      // additional parameters
-		      int eta_rule_type);
+		      int eta_rule_type, const uint num_round, const uint num_epoch);
 
         // main optimization function for SDCA
         void SDCALearn(// Input variables
@@ -54,14 +54,14 @@ class Model {
 		      uint dimension,
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
-		      double lambda,int max_iter,
+		      double lambda,
               std::vector<double> &p,
               bool change,
 		      // Output variables
 		      long& train_time,long& calc_obj_time,
 		      double& obj_value,double& norm_value,
 		      double& loss_value,double& zero_one_error,
-		      double& test_loss,double& test_error);
+		      double& test_loss,double& test_error,const uint num_round, const uint num_epoch);
 
         // function for reading the data
         void ReadData(// input

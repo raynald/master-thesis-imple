@@ -19,14 +19,12 @@ int main(int argc, char** argv) {
     std::string model_filename;
     std::string experiments_file = "noExperimentsFile";
     double lambda = 1.0;
-    int max_iter = 10;
 
     // parse command line
     learning::cmd_line cmdline;
     cmdline.info("Non-uniform SGD and SDCA algorithm");
     cmdline.add_master_option("<data-file>", &data_filename);
     cmdline.add("-lambda", "regularization parameter (default = 0.01)", &lambda, 0.001);
-    cmdline.add("-iter", "number of iterations (default = 10/lambda)", &max_iter, int(100/lambda));
     cmdline.add("-testFile","name of test data file (default = noTestFile)", &test_filename,"noTestFile");
 
     int rc = cmdline.parse(argc, argv);
@@ -91,27 +89,40 @@ int main(int argc, char** argv) {
         //p[i] = 1.0/ num_examples;
     }
 
-
+/*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 1, 
+            lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0);
-
+            0, 5, 5);
+*/
+    /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 1, 
+            lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
             1);
+    */
+    p.clear();
+    sumup = 0;
+    for (uint i = 0; i < num_examples; ++i) {
+        p.push_back(sqrt(Dataset[i].snorm()));
+        sumup += p[i];
+    }
+    for (uint i = 0; i < num_examples; ++i) {
+        //p[i] /= sumup;
+        p[i] = 1.0 / num_examples;
+    }
 
+ 
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 1, 
+            lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error);
-
+            test_loss,test_error, 5, 50);
+    /*
     p.clear();
     //for unifrom sampling
     for (uint i = 0; i < num_examples; ++i) {
@@ -119,25 +130,25 @@ int main(int argc, char** argv) {
     }
 
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 0,
+            lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
             0);
 
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 0,
+            lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
             1);
 
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda,max_iter, p, 0,
+            lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error);
-
+    */
     return(EXIT_SUCCESS);
 }
 

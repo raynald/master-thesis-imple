@@ -40,7 +40,7 @@ void Model::SGDLearn(// Input variables
         uint dimension,
         std::vector<simple_sparse_vector> testDataset,
         std::vector<int> testLabels,
-        double lambda,int max_iter,
+        double lambda,
         std::vector<double> &p,
         bool change, 
         // Output variables
@@ -49,7 +49,7 @@ void Model::SGDLearn(// Input variables
         double& loss_value,double& zero_one_error,
         double& test_loss,double& test_error,
         // additional parameters
-        int eta_rule_type) {
+        int eta_rule_type, const uint num_round, const uint num_epoch) {
 
     uint num_examples = Labels.size();
 
@@ -58,8 +58,6 @@ void Model::SGDLearn(// Input variables
 
     double chiv[num_examples];
     double count[num_examples];
-    const int num_round = 5;
-    const int num_epoch = 5;
     double obj[num_epoch];
     double test[num_epoch];
     double t;
@@ -70,8 +68,7 @@ void Model::SGDLearn(// Input variables
    memset(obj, 0, sizeof(obj));
     memset(test, 0, sizeof(test));
     // ---------------- Main Loop -------------------
-    max_iter = num_examples;
-    cout << "num_examples: " << max_iter;
+    cout << "num_examples: " << num_examples << endl;
     for(uint round = 1; round <= num_round; round++) {
         W.scale(0);
         weight_W.scale(0);
@@ -99,7 +96,7 @@ void Model::SGDLearn(// Input variables
                 // calculate loss
                 cur_loss = max(0, 1 - Labels[r]*prediction);
 
-                if(max_iter - i < 6) {
+                if(num_examples - i < 6) {
                     WeightVector old_W(dimension);
                     double pred;
                     double loss;
@@ -220,14 +217,14 @@ void Model::SDCALearn(
         uint dimension,
         std::vector<simple_sparse_vector> testDataset,
         std::vector<int> testLabels,
-        double lambda,int max_iter,
+        double lambda,
         std::vector<double> &p,
         bool change, 
         // Output variables
         long& train_time,long& calc_obj_time,
         double& obj_value,double& norm_value,
         double& loss_value,double& zero_one_error,
-        double& test_loss,double& test_error) {
+        double& test_loss,double& test_error,const uint num_round, const uint num_epoch) {
 
     uint num_examples = Labels.size();
 
@@ -236,8 +233,6 @@ void Model::SDCALearn(
 
     double chiv[num_examples];
     double count[num_examples];
-    const int num_round = 5;
-    const int num_epoch = 5;
     double obj[num_epoch];
     double test[num_epoch];
     double t;
@@ -248,13 +243,13 @@ void Model::SDCALearn(
     WeightVector W(dimension);
     memset(obj, 0, sizeof(obj));
     memset(test, 0, sizeof(test));
-    memset(alpha, 0, sizeof(alpha));
     // ---------------- Main Loop -------------------
-    max_iter = num_examples;
+    //max_iter = num_examples;
     s = lambda / (lambda * num_examples + 1);
-    cout << "num_examples: " << max_iter;
+    cout << "num_examples: " << num_examples << endl;
     for(uint round = 1; round <= num_round; round++) {
         W.scale(0);
+        memset(alpha, 0, sizeof(alpha));
         t = 0;
         for(uint epoch = 0;epoch < num_epoch; epoch++) {
             memset(chiv, 0, sizeof(chiv));
@@ -269,12 +264,12 @@ void Model::SDCALearn(
                 double prediction = W * Dataset[r];
 
                 // calculate Delta \alpha
-                delta_alpha = max(-s / p[r], min(1-s / p[r], (1-Labels[i]*prediction)/Dataset[r].snorm()*lambda*num_examples))*Labels[r];
+                delta_alpha = max(-s / p[r], min(1-s / p[r], (1-Labels[r]*prediction)/Dataset[r].snorm()*lambda*num_examples))*Labels[r];
 
                 alpha[r] += delta_alpha;
                 W.add(Dataset[r], delta_alpha/lambda/num_examples);
 
-                if(max_iter - i < 6) {
+                if(num_examples - i < 6) {
                     /*
                     WeightVector old_W(dimension);
                     double pred;
