@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
     }
 
  
-    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+    mod.localSDCA(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,

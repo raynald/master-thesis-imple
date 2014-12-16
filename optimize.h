@@ -63,6 +63,22 @@ class Model {
 		      double& loss_value,double& zero_one_error,
 		      double& test_loss,double& test_error,const uint num_round, const uint num_epoch);
 
+        void localSDCA(// Input variables
+		      std::vector<simple_sparse_vector> Dataset,
+		      std::vector<int> Labels,
+		      uint dimension,
+		      std::vector<simple_sparse_vector> testDataset,
+		      std::vector<int> testLabels,
+		      double lambda,
+              std::vector<double> &p,
+              bool change,
+		      // Output variables
+		      long& train_time,long& calc_obj_time,
+		      double& obj_value,double& norm_value,
+		      double& loss_value,double& zero_one_error,
+		      double& test_loss,double& test_error,const uint num_round, const uint num_epoch);
+
+ 
         // function for reading the data
         void ReadData(// input
                 std::string& data_filename,
