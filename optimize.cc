@@ -282,6 +282,24 @@ void Model::localSDCA(
                     W.add(update, 1);
                     alpha[r] = newAlpha;
                 }
+                if(num_examples - i < 6) {
+                    WeightVector old_W(dimension);
+                    double pred;
+                    double loss;
+
+                    for (uint j = 0;j < num_examples;j ++) {
+                        old_W = W;
+                        old_W.scale(lambda);
+                        pred = old_W * Dataset[j];
+                        loss = max(0, 1- Labels[j] * pred);
+                        if(loss > 0.0) {
+                            old_W.add(Dataset[j], -Labels[j]);
+                            count[j] ++;
+                        }
+                        double temp = sqrt(old_W.snorm());
+                        if (temp > chiv[j]) chiv[j] = temp;
+                    }
+                }
             }
 
             // update timeline

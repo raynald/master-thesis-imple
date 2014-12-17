@@ -89,14 +89,12 @@ int main(int argc, char** argv) {
         //p[i] = 1.0/ num_examples;
     }
 
-/*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0, 5, 5);
-*/
+            0, 5, 20);
     /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, 
@@ -112,8 +110,8 @@ int main(int argc, char** argv) {
         sumup += p[i];
     }
     for (uint i = 0; i < num_examples; ++i) {
-        //p[i] /= sumup;
-        p[i] = 1.0 / num_examples;
+        p[i] /= sumup;
+        //p[i] = 1.0 / num_examples;
     }
 
  
@@ -121,8 +119,8 @@ int main(int argc, char** argv) {
             lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error, 5, 50);
-    /*
+            test_loss,test_error, 5, 20);
+
     p.clear();
     //for unifrom sampling
     for (uint i = 0; i < num_examples; ++i) {
@@ -134,21 +132,22 @@ int main(int argc, char** argv) {
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0);
-
+            0, 5, 20);
+    /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
             1);
+    */
 
-    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+    mod.localSDCA(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error);
-    */
+            test_loss,test_error, 5, 20);
+    
     return(EXIT_SUCCESS);
 }
 
