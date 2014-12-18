@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
     //for non-uniform sampling
     for (uint i = 0; i < num_examples; ++i) {
-        p.push_back(sqrt(Dataset[i].snorm())+sqrt(lambda));
+        p.push_back(sqrt(Dataset[i].snorm()));//+sqrt(lambda));
         sumup += p[i];
     }
     average = sumup / num_examples;
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0, 5, 20);
+            0, 5, 5);
     /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, 
@@ -115,11 +115,13 @@ int main(int argc, char** argv) {
     }
 
  
+    /*
     mod.localSDCA(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error, 5, 20);
+    */
 
     p.clear();
     //for unifrom sampling
@@ -132,7 +134,7 @@ int main(int argc, char** argv) {
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0, 5, 20);
+            0, 5, 5);
     /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
@@ -142,11 +144,13 @@ int main(int argc, char** argv) {
             1);
     */
 
+    /*
     mod.localSDCA(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error, 5, 20);
+    */
     
     return(EXIT_SUCCESS);
 }
