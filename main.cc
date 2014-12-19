@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
             lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error, 5, 5);
+            test_loss,test_error, 5, 50);
 
     p.clear();
     //for unifrom sampling
@@ -132,11 +132,13 @@ int main(int argc, char** argv) {
             test_loss,test_error,
             1);
     */
+    /*
     mod.localSDCA(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error, 5, 5);
+    */
     
     return(EXIT_SUCCESS);
 }

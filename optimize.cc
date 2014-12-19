@@ -287,7 +287,6 @@ void Model::localSDCA(
                     WeightVector old_W(dimension);
                     double pred;
                     double loss;
-                    double temp;
 
                     for (uint j = 0;j < num_examples;j ++) {
                         old_W = W;
@@ -295,11 +294,8 @@ void Model::localSDCA(
                         pred = old_W * Dataset[j];
                         loss = max(0, 1- Labels[j] * pred);
                         loss += pred * alpha[j];
-                        if(alpha[j] < 0 || alpha[j] > 1) {
-                            temp = 100;
-                        }
-                        else temp = loss - alpha[j];
-                        if (temp > chiv[j]) chiv[j] = temp;
+                        loss = loss - alpha[j];
+                        if (loss > chiv[j]) chiv[j] = loss;
                     }
                 }
             }
@@ -351,6 +347,7 @@ void Model::localSDCA(
                 for(uint j=0;j<num_examples;j++) {
                     sumup += p[j];
                 }
+                cout << sumup << endl;
                 for(uint j=0;j<num_examples;j++) {
                     p[j] /= sumup; 
                 }
