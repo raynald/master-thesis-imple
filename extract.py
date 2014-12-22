@@ -3,6 +3,7 @@ import sys
 import random
 
 if __name__ == '__main__':
+    random.seed(2015)
     sample = []
     for line in sys.stdin:
         line = line.strip()

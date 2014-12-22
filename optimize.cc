@@ -194,14 +194,18 @@ void Model::SGDLearn(// Input variables
     }
 
     std::cout << "SGD: " << std::endl;
+    std::cout<< " = primal objective of solution\n" ;
     for(uint epoch = 0; epoch < num_epoch; epoch ++) {
-            std::cout << "epoch #: " << epoch << endl;
-            std::cout << "eta_rule_type: " << eta_rule_type << endl;
-            std::cout << obj[epoch]/num_round<< " = primal objective of solution\n" 
-                << test[epoch]/num_round << " = avg zero-one error over test\n" 	    
-                <<  std::endl;
+            //std::cout << "epoch #: " << epoch << endl;
+            //std::cout << "eta_rule_type: " << eta_rule_type << endl;
+        std::cout << obj[epoch]/num_round << " "; 
     }
-
+    cout << endl;
+    std::cout << " = avg zero-one error over test\n";
+    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
+        std::cout << test[epoch]/num_round << " ";
+    }
+    cout << endl;
 }
 
 void Model::localSDCA(
@@ -283,7 +287,6 @@ void Model::localSDCA(
 
                     for (uint j = 0;j < num_examples;j ++) {
                         old_W = W;
-                        //old_W.scale(lambda);
                         pred = old_W * Dataset[j];
                         loss = max(0.0, 1- Labels[j] * pred);
                         if(loss>0) count[j]++;
@@ -335,8 +338,7 @@ void Model::localSDCA(
             for(uint j=0;j<num_examples;j++) {
                 sumup += chiv[j];
             }
-            cout << epoch << ": " << sumup << endl;
-            /* 
+            //cout << epoch << ": " << sumup << endl;
             if(change) {
                 double sumup = 0;
                 for(uint j=0;j<num_examples;j++) {
@@ -345,23 +347,26 @@ void Model::localSDCA(
                 for(uint j=0;j<num_examples;j++) {
                     sumup += chiv[j];
                 }
-                cout << epoch << ": " << sumup << endl;
                 for(uint j=0;j<num_examples;j++) {
                     p[j] /= sumup; 
                 }
             }
-            */
         }
     }
 
     std::cout << "SDCA: " << std::endl;
+    std::cout<< " = primal objective of solution\n" ;
     for(uint epoch = 0; epoch < num_epoch; epoch ++) {
-            std::cout << "epoch #: " << epoch << std::endl;
-            std::cout << obj[epoch]/num_round << std::endl;//<< " = primal objective of solution\n" 
-            std::cout << test[epoch]/num_round << std::endl;// << " = avg zero-one error over test\n" 	    
-            std::cout << std::endl;
+            //std::cout << "epoch #: " << epoch << endl;
+            //std::cout << "eta_rule_type: " << eta_rule_type << endl;
+        std::cout << obj[epoch]/num_round << " "; 
     }
-
+    cout << endl;
+    std::cout << " = avg zero-one error over test\n";
+    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
+        std::cout << test[epoch]/num_round << " ";
+    }
+    cout << endl;
 }
 
 /**
