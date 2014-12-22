@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error, 1, 2000);
+
     p.clear();
     //for unifrom sampling
     for (uint i = 0; i < num_examples; ++i) {
