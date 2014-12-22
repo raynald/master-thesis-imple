@@ -345,11 +345,7 @@ void Model::localSDCA(
                 for(uint j=0;j<num_examples;j++) {
                     sumup += chiv[j];
                 }
-<<<<<<< HEAD
                 cout << epoch << ": " << sumup << endl;
-=======
-                cout << sumup << endl;
->>>>>>> 20855374bef68076156137b3b2fb718f5a97b957
                 for(uint j=0;j<num_examples;j++) {
                     p[j] /= sumup; 
                 }
