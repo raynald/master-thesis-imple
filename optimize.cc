@@ -4,6 +4,7 @@
 //=============================================================================
 
 #include "optimize.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -20,14 +21,6 @@ uint get_sample(std::vector<double> &p) {
         if(x<p[i]) return i; else x-=p[i];
     }
     return p.size()-1;
-}
-
-inline double max(const double &x, const double &y) {
-    return x>y?x:y;
-}
-
-inline double min(const double &x, const double &y) {
-    return x<y?x:y;
 }
 
 // ------------------------------------------------------------//
@@ -94,7 +87,7 @@ void Model::SGDLearn(// Input variables
                 double prediction = W * Dataset[r];
 
                 // calculate loss
-                cur_loss = max(0, 1 - Labels[r]*prediction);
+                cur_loss = max(0.0, 1 - Labels[r]*prediction);
 
                 if(num_examples - i < 6) {
                     WeightVector old_W(dimension);
@@ -105,7 +98,7 @@ void Model::SGDLearn(// Input variables
                         old_W = W;
                         old_W.scale(lambda);
                         pred = old_W * Dataset[j];
-                        loss = max(0, 1- Labels[j] * pred);
+                        loss = max(0.0, 1- Labels[j] * pred);
                         if(loss > 0.0) {
                             old_W.add(Dataset[j], -Labels[j]);
                             count[j] ++;
@@ -263,9 +256,9 @@ void Model::localSDCA(
                 // compute projected gradient
                 double proj_grad = grad;
                 if (alpha[r] <= 0.0)
-                    proj_grad = min(grad,0);
+                    proj_grad = min(grad,0.0);
                 else if (alpha[r] >= 1.0)
-                    proj_grad = max(grad,0);
+                    proj_grad = max(grad,0.0);
 
                 if (fabs(proj_grad) != 0.0 ) {
                     double qii  = Dataset[r].snorm();
@@ -287,19 +280,15 @@ void Model::localSDCA(
                     WeightVector old_W(dimension);
                     double pred;
                     double loss;
-                    double temp;
 
                     for (uint j = 0;j < num_examples;j ++) {
                         old_W = W;
                         //old_W.scale(lambda);
                         pred = old_W * Dataset[j];
-                        loss = max(0, 1- Labels[j] * pred);
-                        loss += pred * alpha[j];
-                        if(alpha[j] < 0 || alpha[j] > 1) {
-                            temp = 100;
-                        }
-                        else temp = loss - alpha[j];
-                        if (temp > chiv[j]) chiv[j] = temp;
+                        loss = max(0.0, 1- Labels[j] * pred);
+                        if(loss>0) count[j]++;
+                        loss = loss + pred * alpha[j] - alpha[j];
+                        if (loss > chiv[j]) chiv[j] = loss;
                     }
                 }
             }
@@ -342,19 +331,26 @@ void Model::localSDCA(
             obj[epoch] += obj_value;
             test[epoch] += test_error;
 
+            double sumup = 0;
+            for(uint j=0;j<num_examples;j++) {
+                sumup += chiv[j];
+            }
+            cout << epoch << ": " << sumup << endl;
+            /* 
             if(change) {
                 double sumup = 0;
                 for(uint j=0;j<num_examples;j++) {
                     p[j] = chiv[j];
-                    chiv[j] = 0;
                 }
                 for(uint j=0;j<num_examples;j++) {
-                    sumup += p[j];
+                    sumup += chiv[j];
                 }
+                cout << epoch << ": " << sumup << endl;
                 for(uint j=0;j<num_examples;j++) {
                     p[j] /= sumup; 
                 }
             }
+            */
         }
     }
 
