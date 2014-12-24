@@ -208,6 +208,7 @@ void Model::SGDLearn(// Input variables
     cout << endl;
 }
 
+/*
 void Model::localSDCA(
         std::vector<simple_sparse_vector> Dataset,
         std::vector<int> Labels,
@@ -248,7 +249,7 @@ void Model::localSDCA(
         for(uint epoch = 0;epoch < num_epoch; epoch++) {
             memset(chiv, 0, sizeof(chiv));
             memset(count, 0, sizeof(count));
-            for (uint i = 0;i< num_examples ;++i) {
+            for (uint time = 0; time < num_examples ;++time) {
                 t ++;
 
                 // choose random example
@@ -257,14 +258,16 @@ void Model::localSDCA(
                 // compute hinge loss gradient
                 double prediction = W * Dataset[r];
                 double grad = (Labels[r]*prediction  - 1.0)*(lambda*num_examples);
+                *
                 // compute projected gradient
                 double proj_grad = grad;
-                if (alpha[r] <= 0.0)
+                if (alpha[r] < 0.0)
                     proj_grad = min(grad,0.0);
-                else if (alpha[r] >= 1.0)
+                else if (alpha[r] > 1.0)
                     proj_grad = max(grad,0.0);
 
                 if (fabs(proj_grad) != 0.0 ) {
+                /
                     double qii  = Dataset[r].snorm();
                     double newAlpha = 1.0;
                     if (qii != 0.0) {
@@ -278,21 +281,25 @@ void Model::localSDCA(
                     update.scale( Labels[r]*(newAlpha-alpha[r])/(lambda*num_examples));
                     W.add(update, 1);
                     alpha[r] = newAlpha;
-                }
+                //}
 
-                if(num_examples - i < 6) {
+                if(num_examples - time < 2) {
                     WeightVector old_W(dimension);
                     double pred;
                     double loss;
+                    double sumup=0;
+                    old_W = W;
 
                     for (uint j = 0;j < num_examples;j ++) {
-                        old_W = W;
                         pred = old_W * Dataset[j];
                         loss = max(0.0, 1- Labels[j] * pred);
                         if(loss>0) count[j]++;
-                        loss = loss + pred * alpha[j] - alpha[j];
+                        loss = loss + alpha[j]*(pred-Labels[j]);
+                        sumup += loss;
                         if (loss > chiv[j]) chiv[j] = loss;
                     }
+                    sumup /= num_examples;
+                    cout << epoch << ": " << sumup << endl;
                 }
             }
 
@@ -338,7 +345,7 @@ void Model::localSDCA(
             for(uint j=0;j<num_examples;j++) {
                 sumup += chiv[j];
             }
-            //cout << epoch << ": " << sumup << endl;
+
             if(change) {
                 double sumup = 0;
                 for(uint j=0;j<num_examples;j++) {
@@ -368,8 +375,8 @@ void Model::localSDCA(
     }
     cout << endl;
 }
+*/
 
-/**
 void Model::SDCALearn(
         std::vector<simple_sparse_vector> Dataset,
         std::vector<int> Labels,
@@ -395,16 +402,14 @@ void Model::SDCALearn(
     double obj[num_epoch];
     double test[num_epoch];
     double t;
-    double delta_alpha;
     double alpha[num_examples];
-    double s;
 
     WeightVector W(dimension);
     memset(obj, 0, sizeof(obj));
     memset(test, 0, sizeof(test));
     // ---------------- Main Loop -------------------
     //max_iter = num_examples;
-    s = lambda / (lambda * num_examples + 1);
+    //s = lambda / (lambda * num_examples + 1);
     cout << "num_examples: " << num_examples << endl;
     for(uint round = 1; round <= num_round; round++) {
         W.scale(0);
@@ -423,30 +428,27 @@ void Model::SDCALearn(
                 double prediction = W * Dataset[r];
 
                 // calculate Delta \alpha
-                delta_alpha = max(-s / p[r], min(1-s / p[r], (1-Labels[r]*prediction)/Dataset[r].snorm()*lambda*num_examples))*Labels[r];
+                double delta_alpha = max(0.0, min(1.0, (1.0-Labels[r]*prediction)/Dataset[r].snorm()*lambda*num_examples+alpha[r]*Labels[r]))*Labels[r]-alpha[r];
 
                 alpha[r] += delta_alpha;
                 W.add(Dataset[r], delta_alpha/lambda/num_examples);
 
                 if(num_examples - i < 6) {
-                    *
                     WeightVector old_W(dimension);
                     double pred;
                     double loss;
+                    double sumup=0;
+                    old_W = W;
 
                     for (uint j = 0;j < num_examples;j ++) {
-                        old_W = W;
-                        old_W.scale(lambda);
                         pred = old_W * Dataset[j];
-                        loss = max(0, 1- Labels[j] * pred);
-                        if(loss > 0.0) {
-                            old_W.add(Dataset[j], -Labels[j]);
-                            count[j] ++;
-                        }
-                        double temp = sqrt(old_W.snorm());
-                        if (temp > chiv[j]) chiv[j] = temp;
+                        loss = max(0.0, 1- Labels[j] * pred);
+                        if(loss>0) count[j]++;
+                        loss = loss + alpha[j]*(pred-Labels[j]);
+                        sumup += loss;
+                        if (loss > chiv[j]) chiv[j] = loss;
                     }
-                    *
+                    sumup /= num_examples;
                 }
             }
 
@@ -488,34 +490,36 @@ void Model::SDCALearn(
             obj[epoch] += obj_value;
             test[epoch] += test_error;
 
-            *
             if(change) {
                 double sumup = 0;
                 for(uint j=0;j<num_examples;j++) {
-                    if(count[j]>0) {
-                        if(p[j] == 0) {
-                            p[j] = sqrt(Dataset[j].snorm()) + sqrt(lambda);
-                        }
-                        else
-                            p[j] = chiv[j];
-                    }
-                    else {
-                        p[j] = 0;
-                    }
-                    chiv[j] = 0;
-                    count[j] = 0;
+                    p[j] = chiv[j];
                 }
                 for(uint j=0;j<num_examples;j++) {
-                    sumup += p[j];
+                    sumup += chiv[j];
                 }
                 for(uint j=0;j<num_examples;j++) {
                     p[j] /= sumup; 
                 }
             }
-            *
-        }
+ 
+       }
     }
 
+    std::cout << "SDCA: " << std::endl;
+    std::cout<< " = primal objective of solution\n" ;
+    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
+            //std::cout << "epoch #: " << epoch << endl;
+            //std::cout << "eta_rule_type: " << eta_rule_type << endl;
+        std::cout << obj[epoch]/num_round << " "; 
+    }
+    cout << endl;
+    std::cout << " = avg zero-one error over test\n";
+    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
+        std::cout << test[epoch]/num_round << " ";
+    }
+    cout << endl;
+    /*
     std::cout << "SDCA: " << std::endl;
     for(uint epoch = 0; epoch < num_epoch; epoch ++) {
             std::cout << "epoch #: " << epoch << endl;
@@ -523,9 +527,8 @@ void Model::SDCALearn(
                 << test[epoch]/num_round << " = avg zero-one error over test\n" 	    
                 <<  std::endl;
     }
-
+    */
 }
-*/
 
 // ------------------------------------------------------------//
 // ---------------- READING DATA ------------------------------//
@@ -575,6 +578,7 @@ void Model::ReadData(// input
         int label = 0;
         is >> label;
         if(label==0) label=-1;
+        if(label==2) label=-1;
         Labels.push_back(label);
         simple_sparse_vector instance(is,n);
         Dataset.push_back(instance);

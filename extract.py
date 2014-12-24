@@ -9,6 +9,6 @@ if __name__ == '__main__':
         line = line.strip()
         sample += [line]
     random.shuffle(sample)
-    for i in range(len(sample)/10):
+    for i in range(len(sample)/100+1, len(sample)/100+len(sample)/100*9):
         print sample[i]
 
