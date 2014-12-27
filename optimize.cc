@@ -1,8 +1,3 @@
-//=============================================================================
-// File Name: optimize.cc
-// implements the main optimization function
-//=============================================================================
-
 #include "optimize.h"
 #include <algorithm>
 
@@ -23,10 +18,6 @@ uint get_sample(std::vector<double> &p) {
     return p.size()-1;
 }
 
-// ------------------------------------------------------------//
-// ---------------- OPTIMIZING --------------------------------//
-// ------------------------------------------------------------//
-
 void Model::SGDLearn(// Input variables
         std::vector<simple_sparse_vector> Dataset,
         std::vector<int> Labels,
@@ -34,8 +25,8 @@ void Model::SGDLearn(// Input variables
         std::vector<simple_sparse_vector> testDataset,
         std::vector<int> testLabels,
         double lambda,
-        std::vector<double> &p,
-        bool change, 
+        std::vector<double> p,
+        bool change, bool VR, 
         // Output variables
         long& train_time,long& calc_obj_time,
         double& obj_value,double& norm_value,
@@ -55,9 +46,14 @@ void Model::SGDLearn(// Input variables
     double test[num_epoch];
     double t;
     double cur_loss;
+    vector<double> prob;
 
     WeightVector W(dimension);
+    WeightVector C(dimension);
+    WeightVector rW(dimension);
     WeightVector weight_W(dimension);
+    WeightVector old_W(dimension);
+    WeightVector old_W2(dimension);
     memset(obj, 0, sizeof(obj));
     memset(test, 0, sizeof(test));
     // ---------------- Main Loop -------------------
@@ -65,11 +61,25 @@ void Model::SGDLearn(// Input variables
     for(uint round = 1; round <= num_round; round++) {
         W.scale(0);
         weight_W.scale(0);
+        prob = p;
         t = 0;
         for(uint epoch = 0;epoch < num_epoch; epoch++) {
-            memset(chiv, 0, sizeof(chiv));
             memset(count, 0, sizeof(count));
-            for (uint i = 0;i< num_examples ;++i) {
+            memset(chiv, 0, sizeof(chiv));
+            rW = W;
+            if(VR) {
+                C.scale(0);
+                for (uint i = 0;i< num_examples; ++i) {
+                    double pred = rW * Dataset[i];
+                    double loss = max(0.0, 1 - Labels[i] * pred);
+                    if(loss > 0.0) {
+                        C.add(Dataset[i], -Labels[i]);
+                    }
+                }
+                C.scale(1.0/num_examples);
+                C.add(W, lambda);
+            }
+            for (uint i = 0;i < num_examples; ++i) {
                 // learning rate
                 double eta;
 
@@ -81,7 +91,7 @@ void Model::SGDLearn(// Input variables
                 } 
 
                 // choose random example
-                uint r = get_sample(p);
+                uint r = get_sample(prob);
 
                 // calculate prediction
                 double prediction = W * Dataset[r];
@@ -108,15 +118,26 @@ void Model::SGDLearn(// Input variables
                     }
                 }
 
-                // scale w 
-                W.scale(1.0 - eta*lambda/num_examples/p[r]);
-
-                // and add to the gradient
-                if (cur_loss > 0.0) {
-                    double grad_weights = eta*Labels[r]/num_examples/p[r];
-                    // and add sub-gradients
-                    W.add(Dataset[r],grad_weights);
+                old_W = W;
+                old_W.scale(lambda);
+                if(cur_loss > 0.0) {
+                    old_W.add(Dataset[r], -Labels[r]);
                 }
+
+                if(VR) {
+                    old_W2 = rW;
+                    old_W2.scale(lambda);
+                    double pred = rW * Dataset[r];
+                    double loss = max(0.0, 1 - Labels[r] * pred);
+                    if(loss > 0.0) {
+                        old_W2.add(Dataset[r], -Labels[r]);
+                    }
+                    old_W.add(old_W2,-1);
+                    old_W.add(C,num_examples*prob[r]);
+                }
+
+                W.add(old_W, -eta/(num_examples*prob[r]));
+
                 weight_W.add(W, t);
             }
 
@@ -171,23 +192,23 @@ void Model::SGDLearn(// Input variables
                 double sumup = 0;
                 for(uint j=0;j<num_examples;j++) {
                     if(count[j]>0) {
-                        if(p[j] == 0) {
-                            p[j] = sqrt(Dataset[j].snorm());
+                        if(prob[j] <= 1.1/num_examples/1e3) {
+                            prob[j] = sqrt(Dataset[j].snorm())+sqrt(lambda);
                         }
                         else
-                            p[j] = chiv[j];
+                            prob[j] = max(chiv[j], 1.0/num_examples/1e3);
                     }
                     else {
-                        p[j] = 0;
+                        prob[j] = 1.0/num_examples/1e3;
                     }
                     chiv[j] = 0;
                     count[j] = 0;
                 }
                 for(uint j=0;j<num_examples;j++) {
-                    sumup += p[j];
+                    sumup += prob[j];
                 }
                 for(uint j=0;j<num_examples;j++) {
-                    p[j] /= sumup; 
+                    prob[j] /= sumup; 
                 }
             }
         }
@@ -208,175 +229,6 @@ void Model::SGDLearn(// Input variables
     cout << endl;
 }
 
-/*
-void Model::localSDCA(
-        std::vector<simple_sparse_vector> Dataset,
-        std::vector<int> Labels,
-        uint dimension,
-        std::vector<simple_sparse_vector> testDataset,
-        std::vector<int> testLabels,
-        double lambda,
-        std::vector<double> &p,
-        bool change, 
-        // Output variables
-        long& train_time,long& calc_obj_time,
-        double& obj_value,double& norm_value,
-        double& loss_value,double& zero_one_error,
-        double& test_loss,double& test_error,const uint num_round, const uint num_epoch) {
-
-    uint num_examples = Labels.size();
-
-    long startTime = get_runtime();
-    long endTime;
-
-    double chiv[num_examples];
-    double count[num_examples];
-    double obj[num_epoch];
-    double test[num_epoch];
-    double t;
-    double alpha[num_examples];
-
-    memset(obj, 0, sizeof(obj));
-    memset(test, 0, sizeof(test));
-    // ---------------- Main Loop -------------------
-    //max_iter = num_examples;
-    cout << "num_examples: " << num_examples << endl;
-    for(uint round = 1; round <= num_round; round++) {
-        WeightVector W(dimension);
-        W.scale(0);
-        memset(alpha, 0, sizeof(alpha));
-        t = 0;
-        for(uint epoch = 0;epoch < num_epoch; epoch++) {
-            memset(chiv, 0, sizeof(chiv));
-            memset(count, 0, sizeof(count));
-            for (uint time = 0; time < num_examples ;++time) {
-                t ++;
-
-                // choose random example
-                uint r = get_sample(p);
-
-                // compute hinge loss gradient
-                double prediction = W * Dataset[r];
-                double grad = (Labels[r]*prediction  - 1.0)*(lambda*num_examples);
-                *
-                // compute projected gradient
-                double proj_grad = grad;
-                if (alpha[r] < 0.0)
-                    proj_grad = min(grad,0.0);
-                else if (alpha[r] > 1.0)
-                    proj_grad = max(grad,0.0);
-
-                if (fabs(proj_grad) != 0.0 ) {
-                /
-                    double qii  = Dataset[r].snorm();
-                    double newAlpha = 1.0;
-                    if (qii != 0.0) {
-                        newAlpha = min(max(alpha[r] - grad / qii, 0.0), 1.0);
-                    }
-
-                    // update primal and dual variables
-                    WeightVector update(dimension);
-                    update.scale(0);
-                    update.add(Dataset[r], 1);
-                    update.scale( Labels[r]*(newAlpha-alpha[r])/(lambda*num_examples));
-                    W.add(update, 1);
-                    alpha[r] = newAlpha;
-                //}
-
-                if(num_examples - time < 2) {
-                    WeightVector old_W(dimension);
-                    double pred;
-                    double loss;
-                    double sumup=0;
-                    old_W = W;
-
-                    for (uint j = 0;j < num_examples;j ++) {
-                        pred = old_W * Dataset[j];
-                        loss = max(0.0, 1- Labels[j] * pred);
-                        if(loss>0) count[j]++;
-                        loss = loss + alpha[j]*(pred-Labels[j]);
-                        sumup += loss;
-                        if (loss > chiv[j]) chiv[j] = loss;
-                    }
-                    sumup /= num_examples;
-                    cout << epoch << ": " << sumup << endl;
-                }
-            }
-
-            // update timeline
-            endTime = get_runtime();
-            train_time = endTime - startTime;
-            startTime = get_runtime();
-
-            // Calculate objective value
-            norm_value = W.snorm();
-            obj_value = norm_value * lambda / 2.0;
-            loss_value = 0.0;
-            zero_one_error = 0.0;
-            for (uint i=0; i < Dataset.size(); ++i) {
-                double cur_loss = 1 - Labels[i]*(W * Dataset[i]); 
-                if (cur_loss < 0.0) cur_loss = 0.0;
-                loss_value += cur_loss/num_examples;
-                obj_value += cur_loss/num_examples;
-                if (cur_loss >= 1.0) zero_one_error += 1.0/num_examples;
-            }
-
-            endTime = get_runtime();
-            calc_obj_time = endTime - startTime;
-
-            // Calculate test_loss and test_error
-            test_loss = 0.0;
-            test_error = 0.0;
-            for (uint i=0; i < testDataset.size(); ++i) {
-                double cur_loss = 1 - testLabels[i]*(W * testDataset[i]); 
-                if (cur_loss < 0.0) cur_loss = 0.0;
-                test_loss += cur_loss;
-                if (cur_loss >= 1.0) test_error += 1.0;
-            }
-            if (testDataset.size() != 0) {
-                test_loss /= testDataset.size();
-                test_error /= testDataset.size();
-            }
-
-            obj[epoch] += obj_value;
-            test[epoch] += test_error;
-
-            double sumup = 0;
-            for(uint j=0;j<num_examples;j++) {
-                sumup += chiv[j];
-            }
-
-            if(change) {
-                double sumup = 0;
-                for(uint j=0;j<num_examples;j++) {
-                    p[j] = chiv[j];
-                }
-                for(uint j=0;j<num_examples;j++) {
-                    sumup += chiv[j];
-                }
-                for(uint j=0;j<num_examples;j++) {
-                    p[j] /= sumup; 
-                }
-            }
-        }
-    }
-
-    std::cout << "SDCA: " << std::endl;
-    std::cout<< " = primal objective of solution\n" ;
-    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
-            //std::cout << "epoch #: " << epoch << endl;
-            //std::cout << "eta_rule_type: " << eta_rule_type << endl;
-        std::cout << obj[epoch]/num_round << " "; 
-    }
-    cout << endl;
-    std::cout << " = avg zero-one error over test\n";
-    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
-        std::cout << test[epoch]/num_round << " ";
-    }
-    cout << endl;
-}
-*/
-
 void Model::SDCALearn(
         std::vector<simple_sparse_vector> Dataset,
         std::vector<int> Labels,
@@ -384,7 +236,7 @@ void Model::SDCALearn(
         std::vector<simple_sparse_vector> testDataset,
         std::vector<int> testLabels,
         double lambda,
-        std::vector<double> &p,
+        std::vector<double> p,
         bool change, 
         // Output variables
         long& train_time,long& calc_obj_time,
@@ -403,6 +255,7 @@ void Model::SDCALearn(
     double test[num_epoch];
     double t;
     double alpha[num_examples];
+    vector<double> prob;
 
     WeightVector W(dimension);
     memset(obj, 0, sizeof(obj));
@@ -414,15 +267,16 @@ void Model::SDCALearn(
     for(uint round = 1; round <= num_round; round++) {
         W.scale(0);
         memset(alpha, 0, sizeof(alpha));
+        prob = p;
         t = 0;
         for(uint epoch = 0;epoch < num_epoch; epoch++) {
             memset(chiv, 0, sizeof(chiv));
             memset(count, 0, sizeof(count));
-            for (uint i = 0;i< num_examples ;++i) {
+            for (uint i = 0;i < num_examples ;++i) {
                 t ++;
 
                 // choose random example
-                uint r = get_sample(p);
+                uint r = get_sample(prob);
 
                 // calculate prediction
                 double prediction = W * Dataset[r];
@@ -493,16 +347,15 @@ void Model::SDCALearn(
             if(change) {
                 double sumup = 0;
                 for(uint j=0;j<num_examples;j++) {
-                    p[j] = chiv[j];
+                    prob[j] = chiv[j];
                 }
                 for(uint j=0;j<num_examples;j++) {
                     sumup += chiv[j];
                 }
                 for(uint j=0;j<num_examples;j++) {
-                    p[j] /= sumup; 
+                    prob[j] /= sumup; 
                 }
             }
- 
        }
     }
 
@@ -519,15 +372,6 @@ void Model::SDCALearn(
         std::cout << test[epoch]/num_round << " ";
     }
     cout << endl;
-    /*
-    std::cout << "SDCA: " << std::endl;
-    for(uint epoch = 0; epoch < num_epoch; epoch ++) {
-            std::cout << "epoch #: " << epoch << endl;
-            std::cout << obj[epoch]/num_round<< " = primal objective of solution\n" 
-                << test[epoch]/num_round << " = avg zero-one error over test\n" 	    
-                <<  std::endl;
-    }
-    */
 }
 
 // ------------------------------------------------------------//

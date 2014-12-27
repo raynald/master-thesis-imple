@@ -18,6 +18,3 @@ TO_DO:
 -----
     Usage:
     Installation:
-
-    - Calculate Dual gap
-    - Check Converge to same value

@@ -37,8 +37,8 @@ class Model {
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
 		      double lambda,
-              std::vector<double> &p,
-              bool change,
+              std::vector<double> p, 
+              bool change, bool VR,
 		      // Output variables
 		      long& train_time,long& calc_obj_time,
 		      double& obj_value,double& norm_value,
@@ -55,7 +55,7 @@ class Model {
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
 		      double lambda,
-              std::vector<double> &p,
+              std::vector<double> p,
               bool change,
 		      // Output variables
 		      long& train_time,long& calc_obj_time,
@@ -70,7 +70,7 @@ class Model {
 		      std::vector<simple_sparse_vector> testDataset,
 		      std::vector<int> testLabels,
 		      double lambda,
-              std::vector<double> &p,
+              std::vector<double> p,
               bool change,
 		      // Output variables
 		      long& train_time,long& calc_obj_time,

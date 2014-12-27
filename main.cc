@@ -18,12 +18,14 @@ int main(int argc, char** argv) {
     std::string test_filename;
     std::string model_filename;
     std::string experiments_file = "noExperimentsFile";
-    double lambda = 1.0;
+    double lambda = 0.001;
+    uint epoch = 30;
 
     // parse command line
     learning::cmd_line cmdline;
     cmdline.info("Non-uniform SGD and SDCA algorithm");
     cmdline.add_master_option("<data-file>", &data_filename);
+    cmdline.add("-epoch", "number of epoches (default = 30)", &epoch, 30);
     cmdline.add("-lambda", "regularization parameter (default = 0.01)", &lambda, 0.001);
     cmdline.add("-testFile","name of test data file (default = noTestFile)", &test_filename,"noTestFile");
 
@@ -55,7 +57,7 @@ int main(int argc, char** argv) {
     std::cerr << readingTime+testReadingTime << " = Time for reading the data" <<  std::endl;
 
     // choose a random seed
-    srand(20141010);
+    srand(20141225);
 
     // -------------------------------------------------------------
     // ---------------------- Main Learning function ---------------
@@ -70,10 +72,11 @@ int main(int argc, char** argv) {
     double average = 0;
     double variance = 0;
     uint num_examples = Labels.size();
+    const uint num_rounds = 10;
 
     //for adaptive sampling
     for (uint i = 0; i < num_examples; ++i) {
-        p.push_back(sqrt(Dataset[i].snorm()));
+        p.push_back(sqrt(Dataset[i].snorm())+sqrt(lambda));
         sumup += p[i];
     }
     average = sumup / num_examples;
@@ -87,69 +90,62 @@ int main(int argc, char** argv) {
     for (uint i = 0; i < num_examples; ++i) {
         p[i] /= sumup;
     }
-    /* 
+
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 1,
+            lambda, p, 1, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0, 5, 30);
-    */
+            0, num_rounds, epoch);
     
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, 
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error, 5, 30);
-
-    p.clear();
+            test_loss,test_error, num_rounds, epoch);
 
     //for non-uniform sampling
-    for (uint i = 0; i < num_examples; ++i) {
-        p.push_back(sqrt(Dataset[i].snorm()));//+sqrt(lambda));
-        sumup += p[i];
-    }
-    for (uint i = 0; i < num_examples; ++i) {
-        p[i] /= sumup;
-    }
 
-    /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0,
+            lambda, p, 0, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0, 5, 30);
-    */
+            0, num_rounds, epoch);
 
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error, 5, 30);
-
-    p.clear();
+            test_loss,test_error, num_rounds, epoch);
 
     //for unifrom sampling
+    p.clear();
     for (uint i = 0; i < num_examples; ++i) {
         p.push_back(1.0/num_examples);
     }
     
-    /*
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0,
+            lambda, p, 0, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
             test_loss,test_error,
-            0, 1, 100);
-    */ 
+            0, num_rounds, epoch);
 
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0,
             trainTime,calc_obj_time,obj_value,norm_value,
             loss_value,zero_one_error,
-            test_loss,test_error, 5, 30);
+            test_loss,test_error, num_rounds, epoch);
     
+    //Variance reduction
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, 0, 1,
+            trainTime,calc_obj_time,obj_value,norm_value,
+            loss_value,zero_one_error,
+            test_loss,test_error,
+            0, num_rounds, epoch);
+ 
     return(EXIT_SUCCESS);
 }
 
