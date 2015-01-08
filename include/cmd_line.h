@@ -1,9 +1,9 @@
 //=============================================================================
 // File Name: cmd_line.h
-// Written by: Joseph Keshet (15.02.04)
+// Copyright [2004]: Joseph Keshet (15.02.04)
 //=============================================================================
-#ifndef _CMD_LINE_H_
-#define _CMD_LINE_H_
+#ifndef CMD_LINE_H_
+#define CMD_LINE_H_
 
 //*****************************************************************************
 // Included Files
@@ -20,8 +20,7 @@ class cmd_option;
 /** Implements a class that parse the command line.
     @author Joseph Keshet (jkeshet@cs.huji.ac.il)
 */
-class cmd_line
-{
+class cmd_line {
  public:
 //-----------------------------------------------------------------------------
 /** Adds general information that will be printed when -h is called
@@ -31,27 +30,27 @@ class cmd_line
 /** Adds command line option of int type
  */
   void add(const std::string &tag, const std::string &helper, int *value,
-	   const int default_value);
+          const int default_value);
 //-----------------------------------------------------------------------------
 /** Adds command line option of unsigned int type
  */
-  void add(const std::string &tag, const std::string &helper, 
-	   unsigned int *value, const int default_value);
+  void add(const std::string &tag, const std::string &helper,
+          unsigned int *value, const int default_value);
 //-----------------------------------------------------------------------------
 /** Adds command line option of double type
  */
   void add(const std::string &tag, const std::string &helper, double *value,
-	   const double default_value);
+          const double default_value);
 //-----------------------------------------------------------------------------
 /** Adds command line option of bool type
  */
   void add(const std::string &tag, const std::string &helper, bool *value,
-	   const bool default_value);
+          const bool default_value);
 //-----------------------------------------------------------------------------
 /** Adds command line option of std::string type
  */
-  void add(const std::string &tag, const std::string &helper, 
-	   std::string *value, const std::string &default_value);
+  void add(const std::string &tag, const std::string &helper,
+          std::string *value, const std::string &default_value);
 //-----------------------------------------------------------------------------
 /** Adds command line option
  */
@@ -59,12 +58,12 @@ class cmd_line
 //-----------------------------------------------------------------------------
 /** Adds command line option
  */
-  void add_master_option(const std::string &helper, 
-			 std::string *master_option);
+  void add_master_option(const std::string &helper,
+          std::string *master_option);
 //-----------------------------------------------------------------------------
 /** Parses command line. Returns the number of arguments proceeded.
  */  
-  int parse(int argc, char **argv) ;
+  int parse(int argc, char **argv);
 //-----------------------------------------------------------------------------
 /** Prints help information for program and usage of tags
  */  
@@ -80,7 +79,6 @@ class cmd_line
   std::vector<cmd_option*> master_options_vector;
   std::string program_name;
 };
+};  // namespace learning
 
-}; // namespace learning
-
-#endif // _CMD_LINE_H_
+#endif  // CMD_LINE_H_

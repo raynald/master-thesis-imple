@@ -10,7 +10,7 @@
 //*****************************************************************************
 // Included Files
 //*****************************************************************************
-#include "simple_sparse_vec_hash.h"
+#include "include/simple_sparse_vec_hash.h"
 
 /*---------------------------------------------------------------------------*/
 simple_sparse_vector::simple_sparse_vector(std::istream& is) : my_vec() {

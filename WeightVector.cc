@@ -3,7 +3,7 @@
 // implements the methods of the WeightVector class
 //=============================================================================
 
-#include "WeightVector.h"
+#include "include/WeightVector.h"
 
 void WeightVector::add(simple_sparse_vector& x, double s) {
   double pred = 0.0, norm_x = 0.0;

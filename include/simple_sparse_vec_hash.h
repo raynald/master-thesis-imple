@@ -5,12 +5,12 @@
 //==============================================================================
 // File Name: simple_sparse_vec_hash.h
 // Written by: Shai Shalev-Shwartz (28.01.07)
-// implement a very simple hash table and sparse vector based on stl vector 
+// implement a very simple hash table and sparse vector based on stl vector
 // and the modulu function
 //==============================================================================
 
-#ifndef _SHAI_SIMPLE_HASH_TABLE
-#define _SHAI_SIMPLE_HASH_TABLE
+#ifndef SIMPLE_SPARSE_VEC_HASH_H_
+#define SIMPLE_SPARSE_VEC_HASH_H_
 
 //*****************************************************************************
 // Included Files
@@ -22,7 +22,7 @@
 #include <vector>
 #include <sstream>
 
-typedef unsigned int 	uint;
+typedef unsigned int uint;
 
 class IndexValuePair {
  public:
@@ -31,7 +31,7 @@ class IndexValuePair {
   uint first;
   double second;
 };
- 
+
 typedef std::vector<IndexValuePair>::iterator simple_sparse_vector_iterator;
 
 
@@ -40,7 +40,6 @@ typedef std::vector<IndexValuePair>::iterator simple_sparse_vector_iterator;
 */
 class simple_sparse_vector {
  public:
-
   /** Default Constructor. Allocates an all zeros sparse vector
   */
   simple_sparse_vector() {  }
@@ -49,18 +48,17 @@ class simple_sparse_vector {
       Construct a vector from this line.
       @param is The input stream to read from.
   */
-  simple_sparse_vector(std::istream& is);
+  explicit simple_sparse_vector(std::istream& is);
 
   /** Constructor. Construct a vector from an istringstream.
       @param is The input stringstream to read from.
       @param n The number of elements to read
   */
-  simple_sparse_vector(std::istringstream& is,int n);
-  
+  simple_sparse_vector(std::istringstream& is, int n);
 
   // Multiply a sparse vector by a scalar s
   void scale(double s);
- 
+
   /** Returns the squared l_2 norm of the vector
       @return the squared l_2 norm of the vector
   */
@@ -81,16 +79,12 @@ class simple_sparse_vector {
   void zero();
 
   std::vector<IndexValuePair> my_vec;
-
 };
 
 
 #ifdef nodef
 
-
 typedef std::vector< std::vector<IndexValuePair> >::iterator simple_hash_table_iterator;
-
-
 
 /** Implements a simple hash table based on stl vector.
     The hash function is the modulu %
@@ -98,14 +92,13 @@ typedef std::vector< std::vector<IndexValuePair> >::iterator simple_hash_table_i
 */
 class simple_hash_table {
  public:
-
   /** Default Constructor. Allocates an all zeros hash table
   */
   simple_hash_table() : my_vec(1087) {  }
 
   /** Constructor. Allocates an all zeros hash table with m entries
   */
-  simple_hash_table(uint m) : my_vec(m) {  }
+  explicit simple_hash_table(uint m) : my_vec(m) {  }
 
 
   /** retreive the value of the i'th element of the hash
@@ -172,4 +165,4 @@ double operator* (simple_hash_table& u, simple_sparse_vector& v);
 
 #endif
 
-#endif
+#endif  // SIMPLE_SPARSE_VEC_HASH_H_

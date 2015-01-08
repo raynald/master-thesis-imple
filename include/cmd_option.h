@@ -1,9 +1,9 @@
 //=============================================================================
 // File Name: cmd_option.h
-// Written by: Joseph Keshet (15.02.04)
+// Copyright [2004]: Joseph Keshet (15.02.04)
 //=============================================================================
-#ifndef _CMD_OPTION_H_
-#define _CMD_OPTION_H_
+#ifndef CMD_OPTION_H_
+#define CMD_OPTION_H_
 
 //*****************************************************************************
 // Included Files
@@ -18,8 +18,7 @@ namespace learning {
     a class that keep data of each specific option in the command line.
     @author Joseph Keshet (jkeshet@cs.huji.ac.il)
 */
-class cmd_option
-{
+class cmd_option {
  public:
 //-----------------------------------------------------------------------------
 /** Default constructor.
@@ -32,7 +31,7 @@ class cmd_option
 //-----------------------------------------------------------------------------
 /** Returns referance to the helper string
 */
-  std::string& helper() { return helper_;} 
+  std::string& helper() { return helper_;}
 //-----------------------------------------------------------------------------
 /** Returns referance to the tag string
 */
@@ -48,7 +47,6 @@ class cmd_option
  protected:
   std::string tag_;
   std::string helper_;
-  
 };
 
 //-----------------------------------------------------------------------------
@@ -56,36 +54,31 @@ class cmd_option
 template <typename T>
 struct option_type_traits { };
 
-template<> struct option_type_traits<int>
-{
+template<> struct option_type_traits<int> {
   typedef int option_type;
   static inline bool is_bool() { return false; }
   static option_type from_string(char *str) { return strtol(str, NULL, 10); }
 };
 
-template<> struct option_type_traits<unsigned int>
-{
+template<> struct option_type_traits<unsigned int> {
   typedef unsigned int option_type;
   static inline bool is_bool() { return false; }
   static option_type from_string(char *str) { return strtoul(str, NULL, 10); }
 };
 
-template<> struct option_type_traits<bool>
-{
+template<> struct option_type_traits<bool> {
   typedef bool option_type;
   static inline bool is_bool() { return true; }
   static option_type from_string(char *str) { return true; }
 };
 
-template<> struct option_type_traits<double>
-{
+template<> struct option_type_traits<double> {
   typedef double option_type;
   static inline bool is_bool() { return false; }
   static option_type from_string(char *str) { return strtod(str, NULL); }
 };
 
-template<> struct option_type_traits<std::string>
-{
+template<> struct option_type_traits<std::string> {
   typedef std::string option_type;
   static inline bool is_bool() { return false; }
   static option_type from_string(char *str) { return std::string(str); }
@@ -101,7 +94,7 @@ template<> struct option_type_traits<std::string>
 */
 template <typename T >
 class type_cmd_option : public cmd_option {
-  public:
+ public:
   typedef option_type_traits<T> traits_type;
   typedef typename traits_type::option_type option_type;
   bool is_bool() { return traits_type::is_bool(); }
@@ -116,13 +109,13 @@ class type_cmd_option : public cmd_option {
     option was not set.
 */
   type_cmd_option(const std::string &tag, const std::string &helper, T *value,
-		  T default_value) {
-		    tag_ = tag;
-		    helper_ = helper;
-		    value_ = value;
-		    default_value_ = default_value;
-		    *value_ = default_value;
-		  }
+          T default_value) {
+      tag_ = tag;
+      helper_ = helper;
+      value_ = value;
+      default_value_ = default_value;
+      *value_ = default_value;
+  }
 //-----------------------------------------------------------------------------
 /** Sets a value from the command argument
     @param arg Command argument
@@ -131,7 +124,7 @@ class type_cmd_option : public cmd_option {
 //-----------------------------------------------------------------------------
 /** Returns true if this option needs value after the tag
 */
-  bool needs_value() { return (not is_bool()); }
+  bool needs_value() { return (!is_bool()); }
 
 //*****************************************************************************
 // Data Members
@@ -141,9 +134,9 @@ class type_cmd_option : public cmd_option {
   T default_value_;
 };
 
-}; // namespace learning
+};  // namespace learning
 
-#endif // _CMD_OPTION_H_
+#endif  // CMD_OPTION_H_
 
 //=============================================================================
 //                                 E  O  F
