@@ -31,8 +31,26 @@ double get_runtime(void);
 
 class Model {
  private:
-     const int kMAXEPOCH = 110;
-     const int kNUMEXAMPLE = 465000;
+     struct ResultStruct {
+         double train_time;
+         double calc_obj_time;
+         double norm_value;
+         double loss_value;
+         double zero_one_error;
+         double obj_value;
+         double test_loss;
+         double test_error;
+         ResultStruct() {
+             train_time = 0;
+             calc_obj_time = 0;
+             norm_value = 0;
+             loss_value = 0;
+             zero_one_error = 0;
+             obj_value = 0;
+             test_loss = 0;
+             test_error = 0;
+         }
+     };
 
  public:
      // Main optimization function for SGD
@@ -46,11 +64,6 @@ class Model {
              double lambda,
              std::vector<double> p,
              bool is_adaptive, bool use_variance_reduction,
-             // Output variables
-             double& train_time, double& calc_obj_time,
-             double& obj_value, double& norm_value,
-             double& loss_value, double& zero_one_error,
-             double& test_loss, double& test_error,
              // Additional parameters
              int eta_rule_type, const uint &num_round, const uint &num_epoch);
 
@@ -65,11 +78,6 @@ class Model {
              double lambda,
              std::vector<double> p,
              bool is_adaptive,
-             // Output variables
-             double& train_time, double& calc_obj_time,
-             double& obj_value, double& norm_value,
-             double& loss_value, double& zero_one_error,
-             double& test_loss, double& test_error,
              // Additional parameters
              const uint &num_round, const uint &num_epoch);
 
