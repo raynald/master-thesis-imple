@@ -86,6 +86,14 @@ class WeightVector {
 
   uint dimension() {return d;}
 
+  double onenorm() {
+    double ans = 0;
+    for (uint i=0; i<d; ++i) {
+       ans += my_v[i] * my_a;
+    }
+    return ans;
+  }
+
   // ||this||^2
   double snorm() {
     return my_snorm;

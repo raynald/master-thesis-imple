@@ -5,9 +5,8 @@
 HDR = include/simple_sparse_vec_hash.h include/WeightVector.h include/optimize.h
 SRC = simple_sparse_vec_hash.cc  WeightVector.cc optimize.cc cmd_line.cc
 
-CC = g++
+CC = g++ 
 
-CC      = g++
 CFLAGS  = -Wall -O3 
 #CFLAGS  = -g 
 LFLAGS  = -lm

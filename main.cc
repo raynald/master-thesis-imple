@@ -87,16 +87,25 @@ int main(int argc, char** argv) {
         p[i] /= sumup;
     }
 
+    /*
     std::cout << "Adaptive SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
             lambda, p, 1, 0, 0, num_rounds, epoch);
+    */
     
+    /*
     std::cout << "Adaptive SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 1, num_rounds, epoch);
+    */
 
+    std::cout << "Adaptive 1/t SGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, 1, 0, 1, num_rounds, epoch);
+ 
     //for non-uniform sampling
 
+    /*
     std::cout << "Non-uniform SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0, 0, 0, num_rounds, epoch);
@@ -105,7 +114,10 @@ int main(int argc, char** argv) {
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0, num_rounds, epoch);
 
+    */
+
     //for unifrom sampling
+    /*
     p.clear();
     for (uint i = 0; i < num_examples; ++i) {
         p.push_back(1.0 / num_examples);
@@ -119,11 +131,13 @@ int main(int argc, char** argv) {
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0, num_rounds, epoch);
     
+    */
     //Variance reduction
-    //
+    /*
     std::cout << "Variance SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0, 1, 0, num_rounds, epoch);
+    */
  
     return(EXIT_SUCCESS);
 }

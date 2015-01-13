@@ -52,6 +52,13 @@ class Model {
          }
      };
 
+     uint num_examples;
+     std::vector<double> chiv;
+     std::vector<double> count;
+     std::vector<double> precompute;
+     std::vector<double> alpha;
+     std::vector<ResultStruct> output;
+    
  public:
      // Main optimization function for SGD
      void SGDLearn(
@@ -80,6 +87,9 @@ class Model {
              bool is_adaptive,
              // Additional parameters
              const uint &num_round, const uint &num_epoch);
+    
+     // Print result
+     void Print();
 
      // Function for reading the data
      void ReadData(
