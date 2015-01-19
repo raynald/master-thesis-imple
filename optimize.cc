@@ -14,15 +14,15 @@ double GetRuntime(void) {
 
 // Function for getting an index of a sample point according to p
 uint GetSample(const std::vector<double> &p) {
-    double rand_num = rand() * 1.0 / RAND_MAX;
-    for (uint index = 0; index < p.size(); ++index) {
+    double rand_num = rand() * p[0] / RAND_MAX;
+    for (uint index = 1; index < p.size(); ++index) {
         if (rand_num < p[index]) {
-            return index;
+            return index - 1;
         } else {
             rand_num -= p[index];
         }
     }
-    return p.size()-1;
+    return p.size()-2;
 }
 
 void Model::SGDLearn(
@@ -35,6 +35,7 @@ void Model::SGDLearn(
         double lambda,
         std::vector<double> p,
         bool is_adaptive, bool use_variance_reduction,
+        bool online, 
        // additional parameters
         int eta_rule_type, const uint& num_round, const uint& num_epoch) {
     uint num_examples = Labels.size();
@@ -44,6 +45,7 @@ void Model::SGDLearn(
     double t;
     double cur_loss;
     std::vector<double> prob;
+    std::deque<double> blank;
     WeightVector W(dimension);
     WeightVector rW(dimension);
     WeightVector C(dimension);
@@ -70,6 +72,12 @@ void Model::SGDLearn(
         weight_W.scale(0);
         prob = p;
         t = 0;
+        recent.clear();
+        for (uint i = 0; i < num_examples; ++i) {
+            recent.push_back(blank);
+            recent[i].push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
+        }
+
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
             std::fill(chiv.begin(), chiv.end(), 0);
             std::fill(count.begin(), count.end(), 0);
@@ -104,24 +112,39 @@ void Model::SGDLearn(
                 double prediction = W * Dataset[r];
 
                 // calculate loss
-                cur_loss = std::max(0.0, 1.0 - Labels[r]*prediction);
+                cur_loss = std::max(0.0, 1.0 - Labels[r] * prediction);
 
-                if (is_adaptive && num_examples - i < 6) {
-                    double pred;
-                    double loss;
-                    double temp;
+                if (online) {
+                       double temp = W.snorm() * lambda * lambda;
+                       if(cur_loss > 0.0) {
+                       temp += Dataset[r].snorm() * Labels[r] * Labels[r] - prediction * Labels[r] * lambda * 2.0;
+                       }
+                       temp = sqrt(temp);
+                       if(recent[r].size()==100) recent[r].pop_front();
+                       recent[r].push_back(temp);
+                       double peek = 0;
+                       for(std::deque<double>::iterator ele = recent[r].begin(); ele!=recent[r].end();ele++) 
+                            if(*ele>peek) peek = *ele;
+                       prob[0] += peek - prob[r + 1];
+                       prob[r + 1] = peek; 
+                } else {
 
-                    for (uint j = 0; j < num_examples; ++j) {
-                        pred = W * Dataset[j];
-                        loss = std::max(0.0, 1.0 - Labels[j] * pred);
-                        temp = W.snorm() * lambda * lambda;
-                        if (loss > 0.0) {
-                            temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
-                            ++count[j];
+                    if (is_adaptive && num_examples - i < 6) {
+                        double pred;
+                        double loss;
+                        double temp;
+
+                        for (uint j = 0; j < num_examples; ++j) {
+                            pred = W * Dataset[j];
+                            loss = std::max(0.0, 1.0 - Labels[j] * pred);
+                            temp = W.snorm() * lambda * lambda;
+                            if (loss > 0.0) {
+                                temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
+                                ++count[j];
+                            }
+                            temp = sqrt(temp);
+                            if (temp > chiv[j]) chiv[j] = temp;
                         }
-                        temp = sqrt(temp);
-                         if (temp > chiv[j]) chiv[j] = temp;
-                        //chiv[j] += temp;
                     }
                 }
 
@@ -138,13 +161,14 @@ void Model::SGDLearn(
                         old_W2.add(Dataset[r], -Labels[r]);
                     }
                     old_W.add(old_W2, -1);
-                    old_W.add(C, num_examples * prob[r]);
-                    W.add(old_W, -eta / (num_examples * prob[r]));
+                    old_W.add(C, num_examples * prob[r + 1] / prob[0]);
+                    W.add(old_W, -eta / (num_examples * prob[r + 1] / prob[0]));
                 } else {
-                    W.scale(1.0 - lambda * eta / (num_examples * prob[r]));
+                    W.scale(1.0 - lambda * eta / (num_examples * prob[r + 1] / prob[0]));
                     if(cur_loss > 0.0) {
-                        W.add(Dataset[r], Labels[r] * eta / (num_examples * prob[r]));
+                        W.add(Dataset[r], Labels[r] * eta / (num_examples * prob[r + 1] / prob[0]));
                     }
+
                 }
 
                 if (eta_rule_type == 1) {
@@ -205,28 +229,29 @@ void Model::SGDLearn(
             output[epoch].test_loss += test_loss;
             output[epoch].test_error += test_error;
 
-            if (is_adaptive) {
+            if (!online && is_adaptive) {
                 double sumup = 0;
                 double comeup = 0;
                 for (uint j = 0; j < num_examples; ++j) {
                     if (count[j] > 0) {
-                        if (prob[j] < 0.1 / num_examples) {
-                            prob[j] = sqrt(Dataset[j].snorm());
+                        if (prob[j + 1] / prob[0]  < 0.1 / num_examples) {
+                            prob[j + 1] = p[j + 1];
                         } else {
-                            prob[j] = chiv[j];
+                            prob[j + 1] = chiv[j];
                         }
                     } else {
-                        prob[j] = -1;
+                        prob[j + 1] = -1; 
                     }
                     chiv[j] = 0;
                     count[j] = 0;
                 }
-                for (uint j = 0; j < num_examples; ++j) {
+                for (uint j = 1; j <= num_examples; ++j) {
                     if(prob[j]>0) sumup += prob[j]; else comeup ++;
                 }
-                for (uint j = 0; j < num_examples; ++j) {
+                for (uint j = 1; j <= num_examples; ++j) {
                     if(prob[j]>0) prob[j] /= (sumup+comeup); else prob[j] = 1.0 / (sumup+comeup); 
                 }
+                prob[0] = 1;
             }
         }
     }
@@ -242,7 +267,7 @@ void Model::SGDLearn(
         out->test_error /= num_round;
     }
 
-    std::cout << W.onenorm() << " " << W.snorm() << std::endl;
+    // W.print(std::cout);
     Print();
 }
 
@@ -256,6 +281,8 @@ void Model::SDCALearn(
         double lambda,
         std::vector<double> p,
         bool is_adaptive,
+        bool ada_rule_type, 
+        bool online,
         // Additional parameters
         const uint &num_round, const uint &num_epoch ) {
     uint num_examples = Labels.size();
@@ -303,24 +330,51 @@ void Model::SDCALearn(
                         * lambda * num_examples + alpha[r] * Labels[r]))
                     * Labels[r] - alpha[r];
 
+                if (online) {
+                    double loss = std::max(0.0, 1 - Labels[r] * prediction);
+                    loss = loss + alpha[r] * (prediction - Labels[r]);
+                    prob[0] += loss - prob[r + 1];
+                    prob[r + 1] = loss;
+                }
+
                 alpha[r] += delta_alpha;
                 W.add(Dataset[r], delta_alpha / lambda / num_examples);
 
-                if (is_adaptive && num_examples - i < 6) {
-                    double pred;
-                    double loss;
-                    double sumup = 0;
 
-                    for (uint j = 0; j < num_examples; j ++) {
-                        pred = W * Dataset[j];
-                        loss = std::max(0.0, 1- Labels[j] * pred);
-                        if (loss > 0) count[j]++;
-                        loss = loss + alpha[j]*(pred-Labels[j]);
-                        sumup += loss;
-                        if (loss > chiv[j]) chiv[j] = loss;
+                if (!online && is_adaptive && num_examples - i < 6) {
+                    if (ada_rule_type == 0) {
+                        double pred;
+                        double loss;
+                        double temp;
+
+                        for (uint j = 0; j < num_examples; ++j) {
+                            pred = W * Dataset[j];
+                            loss = std::max(0.0, 1.0 - Labels[j] * pred);
+                            temp = W.snorm() * lambda * lambda;
+                            if (loss > 0.0) {
+                                temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
+                                ++count[j];
+                            }
+                            temp = sqrt(temp);
+                            if (temp > chiv[j]) chiv[j] = temp;
+                        }
+                    } else {
+                        double pred;
+                        double loss;
+                        double sumup = 0;
+
+                        for (uint j = 0; j < num_examples; j ++) {
+                            pred = W * Dataset[j];
+                            loss = std::max(0.0, 1- Labels[j] * pred);
+                            if (loss > 0) count[j]++;
+                            loss = loss + alpha[j]*(pred-Labels[j]);
+                            sumup += loss;
+                            if (loss > chiv[j]) chiv[j] = loss;
+                        }
+                        sumup /= num_examples;
                     }
-                    sumup /= num_examples;
                 }
+
             }
 
             // update timeline
@@ -367,19 +421,56 @@ void Model::SDCALearn(
             output[epoch].test_loss += test_loss;
             output[epoch].test_error += test_error;
 
-            if (is_adaptive) {
-                double sumup = 0;
-                for (uint j = 0; j < num_examples; ++j) {
-                    prob[j] = chiv[j];
-                }
-                for (uint j = 0; j < num_examples; ++j) {
-                    sumup += chiv[j];
-                }
-                for (uint j = 0; j < num_examples; ++j) {
-                    prob[j] /= sumup;
+            if (is_adaptive && !online) {
+                if (ada_rule_type == 0) {
+                    double sumup = 0;
+                    double comeup = 0;
+                    for (uint j = 0; j < num_examples; ++j) {
+                        if (count[j] > 0) {
+                            if (prob[j + 1] / prob[0]  < 0.1 / num_examples) {
+                                prob[j + 1] = p[j + 1];
+                            } else {
+                                prob[j + 1] = chiv[j];
+                            }
+                        } else {
+                            prob[j + 1] = -1; 
+                        }
+                        chiv[j] = 0;
+                        count[j] = 0;
+                    }
+                    for (uint j = 1; j <= num_examples; ++j) {
+                        if(prob[j]>0) sumup += prob[j]; else comeup ++;
+                    }
+                    for (uint j = 1; j <= num_examples; ++j) {
+                        if(prob[j]>0) prob[j] /= (sumup+comeup); else prob[j] = 1.0 / (sumup+comeup); 
+                    }
+                    prob[0] = 1;
+
+                    /*
+                    for (uint j = 0; j < num_examples; ++j) {
+                        prob[0] -= prob[j + 1];
+                        if (count[j] > 0) {
+                            if (prob[j + 1] < 1.01e-5) {
+                                prob[j + 1] = p[j + 1];
+                            } else {
+                                prob[j + 1] = chiv[j];
+                            }
+                        } else {
+                            prob[j + 1] = 1e-5;
+                        }
+                        chiv[j] = 0;
+                        count[j] = 0;
+                        prob[0] += prob[j + 1];
+                    }
+                    */
+                } else {
+                    for (uint j = 0; j < num_examples; ++j) {
+                        prob[0] += chiv[j] - prob[j + 1];
+                        prob[j + 1] = chiv[j];
+                    }
                 }
             }
-       }
+        }
     }
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
         out->train_time /= num_round;
@@ -391,7 +482,7 @@ void Model::SDCALearn(
         out->test_loss /= num_round;
         out->test_error /= num_round;
     }
-    std::cout << W.onenorm() << " " << W.snorm() << std::endl;
+    // W.print(std::cout);
     Print();
 }
 

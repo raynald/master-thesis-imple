@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cmath>
 #include <string>
+#include <queue>
 #include "simple_sparse_vec_hash.h"
 #include "WeightVector.h"
 
@@ -58,6 +59,9 @@ class Model {
      std::vector<double> precompute;
      std::vector<double> alpha;
      std::vector<ResultStruct> output;
+
+     //For online algorithm
+     std::vector<std::deque<double> > recent;
     
  public:
      // Main optimization function for SGD
@@ -71,6 +75,7 @@ class Model {
              double lambda,
              std::vector<double> p,
              bool is_adaptive, bool use_variance_reduction,
+             bool online,
              // Additional parameters
              int eta_rule_type, const uint &num_round, const uint &num_epoch);
 
@@ -85,6 +90,8 @@ class Model {
              double lambda,
              std::vector<double> p,
              bool is_adaptive,
+             bool ada_rule_type,
+             bool online,
              // Additional parameters
              const uint &num_round, const uint &num_epoch);
     
