@@ -15,6 +15,13 @@ double GetRuntime(void) {
 // Function for getting an index of a sample point according to p
 uint GetSample(const std::vector<double> &p) {
     double rand_num = rand() * p[0] / RAND_MAX;
+    double left = 1;
+    double right = p.size() - 1;
+    double mid;
+    while (left < right) {
+        mid = (left + right) / 2;
+        if (p[
+    }
     for (uint index = 1; index < p.size(); ++index) {
         if (rand_num < p[index]) {
             return index - 1;
@@ -25,6 +32,7 @@ uint GetSample(const std::vector<double> &p) {
     return p.size()-2;
 }
 
+// SGD main algorithm
 void Model::SGDLearn(
         // Input variables
         std::vector<simple_sparse_vector> Dataset,
@@ -39,11 +47,8 @@ void Model::SGDLearn(
        // additional parameters
         int eta_rule_type, const uint& num_round, const uint& num_epoch) {
     uint num_examples = Labels.size();
-    // Start time
-    double startTime = GetRuntime();
-    double endTime;
+
     double t;
-    double cur_loss;
     std::vector<double> prob;
     std::deque<double> blank;
     WeightVector W(dimension);
@@ -56,6 +61,7 @@ void Model::SGDLearn(
 
     output.resize(num_epoch);
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
+        out->total_time = 0;
         out->train_time = 0;
         out->calc_obj_time = 0;
         out->norm_value = 0;
@@ -72,15 +78,19 @@ void Model::SGDLearn(
         weight_W.scale(0);
         prob = p;
         t = 0;
-        recent.clear();
-        for (uint i = 0; i < num_examples; ++i) {
-            recent.push_back(blank);
-            recent[i].push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
+        if (online) {
+            recent.clear();
+            for (uint i = 0; i < num_examples; ++i) {
+                recent.push_back(blank);
+                recent[i].push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
+            }
         }
 
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
-            std::fill(chiv.begin(), chiv.end(), 0);
-            std::fill(count.begin(), count.end(), 0);
+           if (is_adaptive) {
+                std::fill(chiv.begin(), chiv.end(), 0);
+                std::fill(count.begin(), count.end(), 0);
+            }
             if (use_variance_reduction && epoch > 0) {
                 rW = W;
                 C.scale(0);
@@ -94,57 +104,68 @@ void Model::SGDLearn(
                 C.scale(1.0 / num_examples);
                 C.add(W, lambda);
             }
-            for (uint i = 0; i < num_examples; ++i) {
-                // learning rate
-                double eta;
 
+            double epoch_start_time = GetRuntime();
+            double train_startTime = GetRuntime();
+            double sample_time = 0;
+ 
+            // learning rate
+            double eta;
+            //double sample_start;
+            double prediction;
+            double cur_loss;
+
+            for (uint i = 0; i < num_examples; ++i) {
                 ++t;
-                switch (eta_rule_type) {
-                    case 0: eta = 1.0 / (lambda * t); break;
-                    case 1: eta = 2.0 / (lambda * (t+1)); break;
-                    default: eta = 1.0 / (lambda*t);
+
+                if (eta_rule_type == 0) {
+                    eta = 1.0 / (lambda * t); 
+                } else {
+                    eta = 2.0 / (lambda * (t+1));
                 }
 
                 // choose random example
+                sample_start = GetRuntime();
                 uint r = GetSample(prob);
+                sample_time += GetRuntime() - sample_start;
+                uint r = 1;
 
                 // calculate prediction
-                double prediction = W * Dataset[r];
+                prediction = W * Dataset[r];
 
                 // calculate loss
                 cur_loss = std::max(0.0, 1.0 - Labels[r] * prediction);
 
                 if (online) {
-                       double temp = W.snorm() * lambda * lambda;
-                       if(cur_loss > 0.0) {
-                       temp += Dataset[r].snorm() * Labels[r] * Labels[r] - prediction * Labels[r] * lambda * 2.0;
-                       }
-                       temp = sqrt(temp);
-                       if(recent[r].size()==100) recent[r].pop_front();
-                       recent[r].push_back(temp);
-                       double peek = 0;
-                       for(std::deque<double>::iterator ele = recent[r].begin(); ele!=recent[r].end();ele++) 
-                            if(*ele>peek) peek = *ele;
-                       prob[0] += peek - prob[r + 1];
-                       prob[r + 1] = peek; 
-                } else {
+                    double temp = W.snorm() * lambda * lambda;
+                    if(cur_loss > 0.0) {
+                        temp += Dataset[r].snorm() * Labels[r] * Labels[r] - prediction * Labels[r] * lambda * 2.0;
+                    }
+                    temp = sqrt(temp);
+                    if(recent[r].size()==100) recent[r].pop_front();
+                    recent[r].push_back(temp);
+                    double peek = 0;
+                    for(std::deque<double>::iterator ele = recent[r].begin(); ele!=recent[r].end();ele++) 
+                        if (*ele > peek) peek = *ele;
+                    prob[0] += peek - prob[r + 1];
+                    prob[r + 1] = peek; 
+                } 
 
-                    if (is_adaptive && num_examples - i < 6) {
-                        double pred;
-                        double loss;
-                        double temp;
+                if (!online && is_adaptive && num_examples - i < 6) {
+                    double pred;
+                    double loss;
+                    double temp;
 
-                        for (uint j = 0; j < num_examples; ++j) {
-                            pred = W * Dataset[j];
-                            loss = std::max(0.0, 1.0 - Labels[j] * pred);
-                            temp = W.snorm() * lambda * lambda;
-                            if (loss > 0.0) {
-                                temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
-                                ++count[j];
-                            }
-                            temp = sqrt(temp);
-                            if (temp > chiv[j]) chiv[j] = temp;
+                    for (uint j = 0; j < num_examples; ++j) {
+                        pred = W * Dataset[j];
+                        loss = std::max(0.0, 1.0 - Labels[j] * pred);
+                        temp = W.snorm() * lambda * lambda;
+                        if (loss > 0.0) {
+                            temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
+                            ++ count[j];
                         }
+                        temp = sqrt(temp);
+                        if (temp > chiv[j]) chiv[j] = temp;
                     }
                 }
 
@@ -168,18 +189,16 @@ void Model::SGDLearn(
                     if(cur_loss > 0.0) {
                         W.add(Dataset[r], Labels[r] * eta / (num_examples * prob[r + 1] / prob[0]));
                     }
-
                 }
-
                 if (eta_rule_type == 1) {
                     weight_W.add(W, t);
                 }
             }
 
             // update timeline
-            endTime = GetRuntime();
-            double train_time = endTime - startTime;
-            startTime = GetRuntime();
+            double train_endTime = GetRuntime() - sample_time;
+            double train_time = train_endTime - train_startTime;
+            double calc_obj_startTime = GetRuntime();
 
             if (eta_rule_type == 1) {
                 eval_W = W;
@@ -199,8 +218,8 @@ void Model::SGDLearn(
                 if (cur_loss >= 1.0) zero_one_error += 1.0/num_examples;
             }
 
-            endTime = GetRuntime();
-            double calc_obj_time = endTime - startTime;
+            double calc_obj_endTime = GetRuntime();
+            double calc_obj_time = calc_obj_endTime - calc_obj_startTime;
 
             // Calculate test_loss and test_error
             double test_loss = 0.0;
@@ -253,6 +272,8 @@ void Model::SGDLearn(
                 }
                 prob[0] = 1;
             }
+            double epoch_end_time= GetRuntime();
+            output[epoch].total_time += epoch_end_time - epoch_start_time;
         }
     }
 
@@ -265,6 +286,7 @@ void Model::SGDLearn(
         out->obj_value /= num_round;
         out->test_loss /= num_round;
         out->test_error /= num_round;
+        out->total_time /= num_round;
     }
 
     // W.print(std::cout);
@@ -287,15 +309,14 @@ void Model::SDCALearn(
         const uint &num_round, const uint &num_epoch ) {
     uint num_examples = Labels.size();
 
-    // Start time
-    double startTime = GetRuntime();
-    double endTime;
     double t;
     std::vector<double> prob;
+    std::deque<double> blank;
     WeightVector W(dimension);
 
     output.resize(num_epoch);
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
+        out->total_time = 0;
         out->train_time = 0;
         out->calc_obj_time = 0;
         out->norm_value = 0;
@@ -312,14 +333,37 @@ void Model::SDCALearn(
         std::fill(alpha.begin(), alpha.end(), 0);
         prob = p;
         t = 0;
+        if(online) {
+            recent.clear();
+            for (uint i = 0;i < num_examples; ++i) {
+                recent.push_back(blank);
+                recent[i].push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
+            }
+        }
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
-            std::fill(chiv.begin(), chiv.end(), 0);
-            std::fill(count.begin(), count.end(), 0);
+            
+            /*
+             * print out probability
+            for (uint i = 1; i <= num_examples; ++i) {
+                std::cout << 1.0 * prob[i] / prob[0] << " \n"[i == num_examples];
+            }
+            */
+
+            // -----------------
+            double train_startTime = GetRuntime();
+            double epoch_start_time = GetRuntime();
+            double sample_time = 0;
+            if (is_adaptive) {
+                std::fill(chiv.begin(), chiv.end(), 0);
+                std::fill(count.begin(), count.end(), 0);
+            }
             for (uint i = 0; i < num_examples; ++i) {
                 ++t;
 
                 // choose random example
+                double sample_start = GetRuntime();
                 uint r = GetSample(prob);
+                sample_time += GetRuntime() - sample_start;
 
                 // calculate prediction
                 double prediction = W * Dataset[r];
@@ -332,9 +376,24 @@ void Model::SDCALearn(
 
                 if (online) {
                     double loss = std::max(0.0, 1 - Labels[r] * prediction);
-                    loss = loss + alpha[r] * (prediction - Labels[r]);
-                    prob[0] += loss - prob[r + 1];
-                    prob[r + 1] = loss;
+                    double temp = 0;
+                    if (ada_rule_type == 0) {
+                        loss = loss + alpha[r] * (prediction - Labels[r]);
+                        temp = loss;
+                    } else {
+                        temp = W.snorm() * lambda * lambda;
+                        if (loss > 0.0) {
+                            temp += Dataset[r].snorm() * Labels[r] * Labels[r] - prediction * Labels[r] * lambda * 2.0;
+                        }
+                        temp = sqrt(temp);
+                    }
+                    if (recent[r].size()==1000) recent[r].pop_front();
+                    recent[r].push_back(temp);
+                    double peek = 0;
+                    for(std::deque<double>::iterator ele = recent[r].begin(); ele != recent[r].end(); ele++) 
+                        if (*ele > peek) peek = *ele;
+                    prob[0] += peek - prob[r + 1];
+                    prob[r + 1] = peek;
                 }
 
                 alpha[r] += delta_alpha;
@@ -342,7 +401,7 @@ void Model::SDCALearn(
 
 
                 if (!online && is_adaptive && num_examples - i < 6) {
-                    if (ada_rule_type == 0) {
+                    if (ada_rule_type == 1) {
                         double pred;
                         double loss;
                         double temp;
@@ -372,15 +431,16 @@ void Model::SDCALearn(
                             if (loss > chiv[j]) chiv[j] = loss;
                         }
                         sumup /= num_examples;
+                        //std::cout << "epoch:" << epoch << " " << sumup << std::endl;
                     }
                 }
 
             }
 
             // update timeline
-            endTime = GetRuntime();
-            double train_time = endTime - startTime;
-            startTime = GetRuntime();
+            double train_endTime = GetRuntime() - sample_time;
+            double train_time = train_endTime - train_startTime;
+            double calc_obj_startTime = GetRuntime();
 
             // Calculate objective value
             double norm_value = W.snorm();
@@ -395,8 +455,8 @@ void Model::SDCALearn(
                 if (cur_loss >= 1.0) zero_one_error += 1.0/num_examples;
             }
 
-            endTime = GetRuntime();
-            double calc_obj_time = endTime - startTime;
+            double calc_obj_endTime = GetRuntime();
+            double calc_obj_time = calc_obj_endTime - calc_obj_startTime;
 
             // Calculate test_loss and test_error
             double test_loss = 0.0;
@@ -470,9 +530,12 @@ void Model::SDCALearn(
                     }
                 }
             }
+            double epoch_end_time= GetRuntime();
+            output[epoch].total_time += epoch_end_time - epoch_start_time;
         }
     }
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
+        out->total_time /= num_round;
         out->train_time /= num_round;
         out->calc_obj_time /= num_round;
         out->norm_value /= num_round;
@@ -487,6 +550,13 @@ void Model::SDCALearn(
 }
 
 void Model::Print() {
+    std::cout << "Total_time:\t";
+    for (auto out: output) {
+        std::cout << out.total_time << " ";
+    }
+    std::cout << std::endl;
+    std::cout << std::endl;
+
     std::cout << "Train_time:\t";
     for (auto out: output) {
         std::cout << out.train_time << " ";
