@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <vector>
 #include <sstream>
+#include <cmath>
 
 #include "simple_sparse_vec_hash.h"
 
@@ -76,6 +77,12 @@ class WeightVector {
 
   // this += s*x
   void add(WeightVector& x, double s);
+  
+  // Added for AdaGrad
+  void sqr_add(WeightVector& x);
+
+  // Added for AdaGrad
+  void pair_mul(WeightVector& x);
 
   void print(std::ostream& os);
 

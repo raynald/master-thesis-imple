@@ -30,6 +30,25 @@ void WeightVector::add(WeightVector& x, double s) {
     
 }
 
+// special for AdaGrad
+void WeightVector::sqr_add(WeightVector& x) {
+  my_snorm = 0.0;
+  for (uint i=0; i < d; ++i) {
+    my_v[i] *= my_a;
+    my_v[i] += (x[i] * x[i]);
+    my_snorm += my_v[i] * my_v[i];
+  }
+  my_a = 1.0;
+    
+}
+
+// special for AdaGrad
+void WeightVector::pair_mul(WeightVector& x) {
+    for (uint i=0; i < d; ++i) {
+        if (my_v[i] != 0) my_v[i] /= sqrt(x[i]);
+    }
+}
+
 void WeightVector::print(std::ostream& os) {
   
   for(uint i=0; i < d; ++i) {
@@ -53,6 +72,5 @@ double operator* (simple_sparse_vector& u, WeightVector& v) {
 double operator* (WeightVector& v, simple_sparse_vector& u) {
   return (u*v);
 }
-
 
 

@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 
     // for adaptive sampling
     p.push_back(1);
-    for (uint i = 0; i < num_examples; ++i) {
+    for (uint i = 1; i <= num_examples; ++i) {
         p.push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
         sumup += p[i];
     }
@@ -91,11 +91,13 @@ int main(int argc, char** argv) {
         p[i] /= sumup;
     }
 
-    //SGD parameter: is_adaptive, use_variance_reduction, online, eta_rule_type
+    //SGD parameter: is_adaptive, use_variance_reduction, online, use_ada_grad, eta_rule_type
     //SDCA parameter: is_daptive, ada_rule_type, online
+    /*
     std::cout << "Adaptive SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
-            lambda, p, 1, 0, 0, 0, num_rounds, epoch);
+            lambda, p, 0, 0, 0, 0, 0, num_rounds, epoch);
+    */
     
     /*
     std::cout << "Adaptive SDCA:\n";
@@ -123,9 +125,11 @@ int main(int argc, char** argv) {
     */
  
     //for non-uniform sampling
+    /*
     std::cout << "Non-uniform SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0, 0, 0, 0, num_rounds, epoch);
+            lambda, p, 0, 0, 0, 0, 0, num_rounds, epoch);
+    */
 
     /*
     std::cout << "Non-uniform SDCA:\n";
@@ -141,11 +145,11 @@ int main(int argc, char** argv) {
         p.push_back(1.0 / num_examples);
     }
     
-    /*
     std::cout << "Uniform SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0, 0, 0, 0, num_rounds, epoch);
+            lambda, p, 0, 0, 0, 1, 0, num_rounds, epoch);
 
+    /*
     std::cout << "Uniform SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, 0, 0, 0, num_rounds, epoch);

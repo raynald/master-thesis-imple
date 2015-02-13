@@ -15,13 +15,6 @@ double GetRuntime(void) {
 // Function for getting an index of a sample point according to p
 uint GetSample(const std::vector<double> &p) {
     double rand_num = rand() * p[0] / RAND_MAX;
-    double left = 1;
-    double right = p.size() - 1;
-    double mid;
-    while (left < right) {
-        mid = (left + right) / 2;
-        if (p[
-    }
     for (uint index = 1; index < p.size(); ++index) {
         if (rand_num < p[index]) {
             return index - 1;
@@ -43,7 +36,7 @@ void Model::SGDLearn(
         double lambda,
         std::vector<double> p,
         bool is_adaptive, bool use_variance_reduction,
-        bool online, 
+        bool online, bool use_ada_grad,
        // additional parameters
         int eta_rule_type, const uint& num_round, const uint& num_epoch) {
     uint num_examples = Labels.size();
@@ -58,6 +51,7 @@ void Model::SGDLearn(
     WeightVector old_W(dimension);
     WeightVector old_W2(dimension);
     WeightVector eval_W(dimension);
+    WeightVector G(dimension);
 
     output.resize(num_epoch);
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
@@ -75,6 +69,7 @@ void Model::SGDLearn(
     // ---------------- Main Loop -------------------
     for (uint round = 1; round <= num_round; round++) {
         W.scale(0);
+        G.scale(0);
         weight_W.scale(0);
         prob = p;
         t = 0;
@@ -107,11 +102,9 @@ void Model::SGDLearn(
 
             double epoch_start_time = GetRuntime();
             double train_startTime = GetRuntime();
-            double sample_time = 0;
  
             // learning rate
             double eta;
-            //double sample_start;
             double prediction;
             double cur_loss;
 
@@ -125,10 +118,7 @@ void Model::SGDLearn(
                 }
 
                 // choose random example
-                sample_start = GetRuntime();
                 uint r = GetSample(prob);
-                sample_time += GetRuntime() - sample_start;
-                uint r = 1;
 
                 // calculate prediction
                 prediction = W * Dataset[r];
@@ -150,25 +140,25 @@ void Model::SGDLearn(
                     prob[0] += peek - prob[r + 1];
                     prob[r + 1] = peek; 
                 } 
+                else {
+                    if (is_adaptive && num_examples - i < 6) {
+                        double pred;
+                        double loss;
+                        double temp;
 
-                if (!online && is_adaptive && num_examples - i < 6) {
-                    double pred;
-                    double loss;
-                    double temp;
-
-                    for (uint j = 0; j < num_examples; ++j) {
-                        pred = W * Dataset[j];
-                        loss = std::max(0.0, 1.0 - Labels[j] * pred);
-                        temp = W.snorm() * lambda * lambda;
-                        if (loss > 0.0) {
-                            temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
-                            ++ count[j];
+                        for (uint j = 0; j < num_examples; ++j) {
+                            pred = W * Dataset[j];
+                            loss = std::max(0.0, 1.0 - Labels[j] * pred);
+                            temp = W.snorm() * lambda * lambda;
+                            if (loss > 0.0) {
+                                temp = temp + Dataset[j].snorm() * Labels[j] * Labels[j] - pred * Labels[j] * lambda * 2.0;
+                                ++ count[j];
+                            }
+                            temp = sqrt(temp);
+                            if (temp > chiv[j]) chiv[j] = temp;
                         }
-                        temp = sqrt(temp);
-                        if (temp > chiv[j]) chiv[j] = temp;
                     }
                 }
-
                 if (use_variance_reduction && epoch > 0) {
                     old_W = W;
                     old_W.scale(lambda);
@@ -185,9 +175,20 @@ void Model::SGDLearn(
                     old_W.add(C, num_examples * prob[r + 1] / prob[0]);
                     W.add(old_W, -eta / (num_examples * prob[r + 1] / prob[0]));
                 } else {
-                    W.scale(1.0 - lambda * eta / (num_examples * prob[r + 1] / prob[0]));
-                    if(cur_loss > 0.0) {
-                        W.add(Dataset[r], Labels[r] * eta / (num_examples * prob[r + 1] / prob[0]));
+                    if (use_ada_grad) {
+                        old_W = W;
+                        old_W.scale(lambda);
+                        if (cur_loss > 0.0) 
+                            old_W.add(Dataset[r], -Labels[r]);
+                        old_W.scale(num_examples * prob[r + 1] / prob[0]);
+                        G.sqr_add(old_W);
+                        old_W.pair_mul(G);
+                        W.add(old_W, -eta);
+                    } else {
+                        W.scale(1.0 - lambda * eta / (num_examples * prob[r + 1] / prob[0]));
+                        if(cur_loss > 0.0) {
+                            W.add(Dataset[r], Labels[r] * eta / (num_examples * prob[r + 1] / prob[0]));
+                        }
                     }
                 }
                 if (eta_rule_type == 1) {
@@ -196,7 +197,7 @@ void Model::SGDLearn(
             }
 
             // update timeline
-            double train_endTime = GetRuntime() - sample_time;
+            double train_endTime = GetRuntime();
             double train_time = train_endTime - train_startTime;
             double calc_obj_startTime = GetRuntime();
 

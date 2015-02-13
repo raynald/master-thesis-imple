@@ -33,6 +33,7 @@ double get_runtime(void);
 class Model {
  private:
      struct ResultStruct {
+         double total_time;
          double train_time;
          double calc_obj_time;
          double norm_value;
@@ -42,6 +43,7 @@ class Model {
          double test_loss;
          double test_error;
          ResultStruct() {
+             total_time = 0;
              train_time = 0;
              calc_obj_time = 0;
              norm_value = 0;
@@ -64,6 +66,7 @@ class Model {
      std::vector<std::deque<double> > recent;
     
  public:
+
      // Main optimization function for SGD
      void SGDLearn(
              // Input variables
@@ -75,7 +78,7 @@ class Model {
              double lambda,
              std::vector<double> p,
              bool is_adaptive, bool use_variance_reduction,
-             bool online,
+             bool online, bool use_ada_grad,
              // Additional parameters
              int eta_rule_type, const uint &num_round, const uint &num_epoch);
 
