@@ -28,6 +28,8 @@
 // function from Joachims that measures CPU time
 double get_runtime(void);
 
+enum Alg {Plain, Adaptive, Online, AdaGrad, VarianceReduction, Adaptive2, Online2};
+
 // main optimization function
 
 class Model {
@@ -61,7 +63,6 @@ class Model {
      std::vector<double> precompute;
      std::vector<double> alpha;
      std::vector<ResultStruct> output;
-
      //For online algorithm
      std::vector<std::deque<double> > recent;
     
@@ -76,9 +77,8 @@ class Model {
              std::vector<simple_sparse_vector> testDataset,
              std::vector<int> testLabels,
              double lambda,
-             std::vector<double> p,
-             bool is_adaptive, bool use_variance_reduction,
-             bool online, bool use_ada_grad,
+             std::vector<double> p, 
+             Alg algo,
              // Additional parameters
              int eta_rule_type, const uint &num_round, const uint &num_epoch);
 
@@ -92,9 +92,7 @@ class Model {
              std::vector<int> testLabels,
              double lambda,
              std::vector<double> p,
-             bool is_adaptive,
-             bool ada_rule_type,
-             bool online,
+             Alg algo,
              // Additional parameters
              const uint &num_round, const uint &num_epoch);
     

@@ -91,7 +91,8 @@ int main(int argc, char** argv) {
         p[i] /= sumup;
     }
 
-    //SGD parameter: is_adaptive, use_variance_reduction, online, use_ada_grad, eta_rule_type
+    //SGD parameter: Adaptive, VarianceReduction, Online, AdaGrad
+    //eta_rule_type
     //SDCA parameter: is_daptive, ada_rule_type, online
     /*
     std::cout << "Adaptive SGD:\n";
@@ -145,16 +146,41 @@ int main(int argc, char** argv) {
         p.push_back(1.0 / num_examples);
     }
     
+    /*
     std::cout << "Uniform SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0, 0, 0, 1, 0, num_rounds, epoch);
+            lambda, p, Online, 0, num_rounds, epoch);
 
+    */
     /*
+    std::cout << "Uniform SGD:\n";
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, 0, num_rounds, epoch);
+    */
+
+
     std::cout << "Uniform SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0, 0, 0, num_rounds, epoch);
-    */
+            lambda, p, Online, num_rounds, epoch);
+
+     std::cout << "Uniform SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Online2, num_rounds, epoch);
+
+      std::cout << "Uniform SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, num_rounds, epoch);
+
+    /*
+       std::cout << "Uniform SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Adaptive, num_rounds, epoch);
+
+        std::cout << "Uniform SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Adaptive2, num_rounds, epoch);
     
+            */
     //Variance reduction
     /*
     std::cout << "Variance SGD:\n";

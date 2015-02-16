@@ -121,10 +121,12 @@ class WeightVector {
   // make_my_a_one
   // use it for forcing my_a to be 1.0
   void make_my_a_one() {
-    for (uint i=0; i<d; ++i) {
-      my_v[i] *= my_a;
-    }
-    my_a = 1.0;
+      if(my_a == 1.0) return;
+
+      for (uint i=0; i<d; ++i) {
+          my_v[i] *= my_a;
+      }
+      my_a = 1.0;
   }
 
  private:  
