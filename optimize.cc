@@ -101,6 +101,7 @@ void Model::SGDLearn(
 
             double epoch_start_time = GetRuntime();
             double train_startTime = GetRuntime();
+            double sample_time = 0;
  
             // learning rate
             double eta;
@@ -115,9 +116,13 @@ void Model::SGDLearn(
                 } else {
                     eta = 2.0 / (lambda * (t+1));
                 }
+                
+                if(algo == AdaGrad) eta = 1.0;
 
                 // choose random example
+                double sample_start = GetRuntime();
                 uint r = GetSample(prob);
+                sample_time += GetRuntime() - sample_start;
 
                 // calculate prediction
                 prediction = W * Dataset[r];
@@ -139,8 +144,7 @@ void Model::SGDLearn(
                         if (*ele > peek) peek = *ele;
                     prob[0] += peek - prob[r + 1];
                     prob[r + 1] = peek; 
-                } 
-                else {
+                } else {
                     if (algo == Adaptive && num_examples - i < 6) {
                         double pred;
                         double loss;
@@ -197,7 +201,7 @@ void Model::SGDLearn(
             }
 
             // update timeline
-            double train_endTime = GetRuntime();
+            double train_endTime = GetRuntime() - sample_time;
             double train_time = train_endTime - train_startTime;
             double calc_obj_startTime = GetRuntime();
 
@@ -312,6 +316,7 @@ void Model::SDCALearn(
     std::vector<double> prob;
     std::deque<double> blank;
     WeightVector W(dimension);
+    int m = 1.5;
 
     output.resize(num_epoch);
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
@@ -396,6 +401,11 @@ void Model::SDCALearn(
                         if (*ele > peek) peek = *ele;
                     prob[0] += peek - prob[r + 1];
                     prob[r + 1] = peek;
+                }
+
+                if (algo == AdaSDCAp) {
+                    prob[0] = prob[0] - prob[r + 1] + prob[r + 1] / m;
+                    prob[r + 1] /= m;
                 }
 
                 alpha[r] += delta_alpha;
@@ -530,6 +540,18 @@ void Model::SDCALearn(
                 for (uint j = 0; j < num_examples; ++j) {
                     prob[0] += chiv[j] - prob[j + 1];
                     prob[j + 1] = chiv[j];
+                }
+            }
+
+            if (algo == AdaSDCAp) {
+                prob[0] = 0;
+                for (uint j = 0; j < num_examples; ++j) {
+                    double pred = W * Dataset[j];
+                    double loss = std::max(0.0, 1.0 - Labels[j] * pred);
+                    double delta = 0;
+                    if (loss > 0) delta = - Labels[j];
+                    prob[j + 1] = fabs(alpha[j + 1] + delta ) * sqrt(sqrt(Dataset[j].snorm()) + num_examples * lambda);
+                    prob[0] += prob[j + 1];
                 }
             }
             double epoch_end_time = GetRuntime();

@@ -28,7 +28,7 @@
 // function from Joachims that measures CPU time
 double get_runtime(void);
 
-enum Alg {Plain, Adaptive, Online, AdaGrad, VarianceReduction, Adaptive2, Online2};
+enum Alg {Plain, Adaptive, Online, AdaGrad, VarianceReduction, Adaptive2, Online2, AdaSDCAp};
 
 // main optimization function
 

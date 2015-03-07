@@ -91,19 +91,60 @@ int main(int argc, char** argv) {
         p[i] /= sumup;
     }
 
-    //SGD parameter: Adaptive, VarianceReduction, Online, AdaGrad
-    //eta_rule_type
     //SDCA parameter: is_daptive, ada_rule_type, online
     /*
     std::cout << "Adaptive SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
-            lambda, p, 0, 0, 0, 0, 0, num_rounds, epoch);
+            lambda, p, Adaptive, 0, num_rounds, epoch);
+    */
+
+    /*
+     std::cout << "AdaGrad SGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, AdaGrad, 0, num_rounds, epoch);
     */
     
+
+    std::cout << "Adaptive SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Adaptive, num_rounds, epoch);
+
+    std::cout << "AdaSDCA+:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, AdaSDCAp, num_rounds, epoch);
+
+    //SGD parameter: Adaptive, VarianceReduction, Online, AdaGrad
+    //eta_rule_type
+    p.clear();
+    p.push_back(1);
+    for (uint i = 0; i < num_examples; ++i) {
+        p.push_back(1.0 / num_examples);
+    }
+ 
+    //SDCA parameter: is_daptive, ada_rule_type, online
+    /*
+    std::cout << "Adaptive SGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, Adaptive, 0, num_rounds, epoch);
+    */
+
+    /*
+    std::cout << "Plain SGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, Plain, 0, num_rounds, epoch);
+    */
+
+    /*
+     std::cout << "AdaGrad SGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, AdaGrad, 0, num_rounds, epoch);
+            */
+    
+
     /*
     std::cout << "Adaptive SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 1, 0, 0, num_rounds, epoch);
+            lambda, p, Adaptive, num_rounds, epoch);
     */
 
     /*
@@ -159,6 +200,7 @@ int main(int argc, char** argv) {
     */
 
 
+    /*
     std::cout << "Uniform SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, Online, num_rounds, epoch);
@@ -170,6 +212,7 @@ int main(int argc, char** argv) {
       std::cout << "Uniform SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
             lambda, p, Plain, num_rounds, epoch);
+            */
 
     /*
        std::cout << "Uniform SDCA:\n";
