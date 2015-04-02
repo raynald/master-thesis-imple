@@ -80,7 +80,7 @@ class Model {
              std::vector<double> p, 
              Alg algo,
              // Additional parameters
-             int eta_rule_type, const uint &num_round, const uint &num_epoch);
+             int eta_rule_type, const uint &num_round, const uint &num_epoch, const uint &k);
 
      // Main optimization function for SDCA
      void SDCALearn(
@@ -94,7 +94,7 @@ class Model {
              std::vector<double> p,
              Alg algo,
              // Additional parameters
-             const uint &num_round, const uint &num_epoch);
+             const uint &num_round, const uint &num_epoch, const uint &k);
     
      // Print result
      void Print();

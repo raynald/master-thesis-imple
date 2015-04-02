@@ -37,7 +37,7 @@ void Model::SGDLearn(
         std::vector<double> p,
         Alg algo, 
         // additional parameters
-        int eta_rule_type, const uint& num_round, const uint& num_epoch) {
+        int eta_rule_type, const uint& num_round, const uint& num_epoch, const uint &k) {
     uint num_examples = Labels.size();
 
     double t;
@@ -69,7 +69,7 @@ void Model::SGDLearn(
     for (uint round = 1; round <= num_round; round++) {
         W.scale(0);
         G.scale(0);
-        weight_W.scale(0);
+        //weight_W.scale(0);
         prob = p;
         t = 0;
         if (algo == Online) {
@@ -81,7 +81,15 @@ void Model::SGDLearn(
         }
 
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
-           if (algo == Adaptive) {
+ 
+            // * print out probability
+            /*
+            for (uint i = 1; i <= num_examples; ++i) {
+                std::cout << 1.0 * prob[i] / prob[0] << " \n"[i == num_examples];
+            }
+            */
+
+           if (algo == Adaptive || algo == Adaptive2) {
                 std::fill(chiv.begin(), chiv.end(), 0);
                 std::fill(count.begin(), count.end(), 0);
             }
@@ -145,7 +153,7 @@ void Model::SGDLearn(
                     prob[0] += peek - prob[r + 1];
                     prob[r + 1] = peek; 
                 } else {
-                    if (algo == Adaptive && num_examples - i < 6) {
+                    if ((algo == Adaptive || algo == Adaptive2) && num_examples - i <= k) {
                         double pred;
                         double loss;
                         double temp;
@@ -277,6 +285,15 @@ void Model::SGDLearn(
                 }
                 prob[0] = 1;
             }
+            else if (algo == Adaptive2) {
+                    prob[0] = 0;
+                    for (uint j = 0; j < num_examples; ++j) {
+                        prob[j + 1] = chiv[j];
+                        chiv[j] = 0;
+                        count[j] = 0;
+                        prob[0] += prob[j + 1];
+                    }
+            }
             double epoch_end_time= GetRuntime();
             output[epoch].total_time += epoch_end_time - epoch_start_time;
         }
@@ -309,14 +326,14 @@ void Model::SDCALearn(
         std::vector<double> p, 
         Alg algo,
         // Additional parameters
-        const uint &num_round, const uint &num_epoch ) {
+        const uint &num_round, const uint &num_epoch, const uint &k ) {
     uint num_examples = Labels.size();
 
     double t;
     std::vector<double> prob;
     std::deque<double> blank;
     WeightVector W(dimension);
-    int m = 1.5;
+    int m = 50;
 
     output.resize(num_epoch);
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
@@ -346,8 +363,8 @@ void Model::SDCALearn(
         }
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
             
+            // * print out probability
             /*
-             * print out probability
             for (uint i = 1; i <= num_examples; ++i) {
                 std::cout << 1.0 * prob[i] / prob[0] << " \n"[i == num_examples];
             }
@@ -412,7 +429,7 @@ void Model::SDCALearn(
                 W.add(Dataset[r], delta_alpha / lambda / num_examples);
 
 
-                if (num_examples - i < 6) {
+                if (num_examples - i <= k) {
                     if (algo == Adaptive) {
                         double pred;
                         double loss;
@@ -495,13 +512,12 @@ void Model::SDCALearn(
             output[epoch].test_error += test_error;
 
             if (algo == Adaptive) {
-                /*
                     double sumup = 0;
                     double comeup = 0;
                     for (uint j = 0; j < num_examples; ++j) {
                         if (count[j] > 0) {
                             if (prob[j + 1] / prob[0]  < 0.1 / num_examples) {
-                                prob[j + 1] = p[j + 1];
+                                prob[j + 1] = sqrt(Dataset[j].snorm());
                             } else {
                                 prob[j + 1] = chiv[j];
                             }
@@ -518,23 +534,6 @@ void Model::SDCALearn(
                         if(prob[j]>0) prob[j] /= (sumup+comeup); else prob[j] = 1.0 / (sumup+comeup); 
                     }
                     prob[0] = 1;
-                */
-
-                    for (uint j = 0; j < num_examples; ++j) {
-                        prob[0] -= prob[j + 1];
-                        if (count[j] > 0) {
-                            if (prob[j + 1] == 0) {
-                                prob[j + 1] = p[j + 1];
-                            } else {
-                                prob[j + 1] = chiv[j];
-                            }
-                        } else {
-                            prob[j + 1] = 0;
-                        }
-                        chiv[j] = 0;
-                        count[j] = 0;
-                        prob[0] += prob[j + 1];
-                    }
             }
             if (algo == Adaptive2) {
                 for (uint j = 0; j < num_examples; ++j) {

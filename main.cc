@@ -91,28 +91,122 @@ int main(int argc, char** argv) {
         p[i] /= sumup;
     }
 
+
     //SDCA parameter: is_daptive, ada_rule_type, online
     /*
     std::cout << "Adaptive SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
-            lambda, p, Adaptive, 0, num_rounds, epoch);
-    */
+            lambda, p, Adaptive, 0, num_rounds, epoch, 1);
+
+            */
+    std::cout << "Adaptive SGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, Adaptive, 0, num_rounds, epoch, 1);
+
+
+    std::cout << "Adaptive SGD2:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, Adaptive2, 0, num_rounds, epoch, 1);
+
 
     /*
      std::cout << "AdaGrad SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
-            lambda, p, AdaGrad, 0, num_rounds, epoch);
+            lambda, p, AdaGrad, 0, num_rounds, epoch, 1);
+
     */
-    
+    /*
+    std::cout << "Adaptive SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Adaptive2, num_rounds, epoch, 1);
 
     std::cout << "Adaptive SDCA:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, Adaptive, num_rounds, epoch);
+            lambda, p, Adaptive, num_rounds, epoch, 1);
+    */
 
+
+    /*
     std::cout << "AdaSDCA+:\n";
     mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, AdaSDCAp, num_rounds, epoch);
+            lambda, p, AdaSDCAp, num_rounds, epoch, 1);
+    */
 
+    /*
+    std::cout << "Non-uniform SGD:\n";
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, 0, num_rounds, epoch, 1);
+
+    std::cout << "Non-uniform SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, num_rounds, epoch, 1);
+    */
+ 
+    /*
+    std::cout << "AdaSGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, Adaptive, 0, num_rounds, epoch, k);
+    */
+
+    /*
+     std::cout << "AdaSGD:\n";
+    mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
+            lambda, p, Adaptive2, 0, num_rounds, epoch);
+    */
+ 
+    /*
+    std::cout << "AdaSDCA plus:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, AdaSDCAp, num_rounds, epoch, 1);
+    */
+
+    /*
+     std::cout << "AdaSDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Adaptive, num_rounds, epoch);
+    */
+ 
+    /*
+    p.clear();
+    p.push_back(1);
+    sumup = 0;
+    for (uint i = 1; i <= num_examples; ++i) {
+        p.push_back(sqrt(Dataset[i].snorm()));
+        sumup += p[i];
+    }
+    for (uint i = 1; i <= num_examples; ++i) {
+        p[i] /= sumup;
+    }
+
+    std::cout << "Non-uniform SGD 2:\n";
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, 0, num_rounds, epoch);
+
+    std::cout << "Non-uniform SDCA 2:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, num_rounds, epoch);
+ 
+    p.clear();
+    p.push_back(1);
+    sumup = 0;
+    for (uint i = 1; i <= num_examples; ++i) {
+        p.push_back(1.0 / sqrt(Dataset[i].snorm()));
+        sumup += p[i];
+    }
+    for (uint i = 1; i <= num_examples; ++i) {
+        p[i] /= sumup;
+    }
+
+    std::cout << "Non-uniform SGD 3:\n";
+    mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, 0, num_rounds, epoch);
+
+    std::cout << "Non-uniform SDCA 3:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, num_rounds, epoch);
+ 
+    */
+ 
     //SGD parameter: Adaptive, VarianceReduction, Online, AdaGrad
     //eta_rule_type
     p.clear();
@@ -131,9 +225,13 @@ int main(int argc, char** argv) {
     /*
     std::cout << "Plain SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
-            lambda, p, Plain, 0, num_rounds, epoch);
-    */
+            lambda, p, Plain, 0, num_rounds, epoch, 1);
 
+    std::cout << "Plain SDCA:\n";
+    mod.SDCALearn(Dataset,Labels,dimension,testDataset,testLabels,
+            lambda, p, Plain, num_rounds, epoch, 1);
+ 
+    */
     /*
      std::cout << "AdaGrad SGD:\n";
     mod.SGDLearn(Dataset, Labels, dimension, testDataset, testLabels,
@@ -170,7 +268,7 @@ int main(int argc, char** argv) {
     /*
     std::cout << "Non-uniform SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
-            lambda, p, 0, 0, 0, 0, 0, num_rounds, epoch);
+            lambda, p, Plain, 0, num_rounds, epoch);
     */
 
     /*
@@ -181,12 +279,13 @@ int main(int argc, char** argv) {
 
 
     //for unifrom sampling
+    /*
     p.clear();
     p.push_back(1);
     for (uint i = 0; i < num_examples; ++i) {
         p.push_back(1.0 / num_examples);
     }
-    
+    */ 
     /*
     std::cout << "Uniform SGD:\n";
     mod.SGDLearn(Dataset,Labels,dimension,testDataset,testLabels,
