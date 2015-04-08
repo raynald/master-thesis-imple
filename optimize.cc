@@ -25,6 +25,24 @@ uint GetSample(const std::vector<double> &p) {
     return p.size()-2;
 }
 
+// Binary Search for getting an index of a sample point according to p
+uint BinaryGetSample(const std::vector<double> &s) {
+    uint s_size  = s.size();
+    double rand_num = rand() * s[s_size-1] / RAND_MAX;
+    uint left = 0, right = s_size - 1;
+    uint mid;
+    while (left <= right) {
+        mid = (left + right) >> 1;
+        if(s[mid] >= rand_num && s[mid-1] < rand_num) return mid - 1;
+        if(s[mid] < rand_num) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    return 0;
+}
+
 // SGD main algorithm
 void Model::SGDLearn(
         // Input variables
@@ -42,6 +60,7 @@ void Model::SGDLearn(
 
     double t;
     std::vector<double> prob;
+    std::vector<double> sum;
     std::deque<double> blank;
     WeightVector W(dimension);
     WeightVector rW(dimension);
@@ -69,16 +88,8 @@ void Model::SGDLearn(
     for (uint round = 1; round <= num_round; round++) {
         W.scale(0);
         G.scale(0);
-        //weight_W.scale(0);
         prob = p;
         t = 0;
-        if (algo == Online) {
-            recent.clear();
-            for (uint i = 0; i < num_examples; ++i) {
-                recent.push_back(blank);
-                recent[i].push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
-            }
-        }
 
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
  
@@ -89,6 +100,11 @@ void Model::SGDLearn(
             }
             */
 
+            sum.clear();
+            sum.push_back(0);
+            for (uint i = 1; i <= num_examples; ++i) {
+                sum.push_back(sum[i-1]+prob[i]);
+            }
            if (algo == Adaptive || algo == Adaptive2) {
                 std::fill(chiv.begin(), chiv.end(), 0);
                 std::fill(count.begin(), count.end(), 0);
@@ -126,10 +142,12 @@ void Model::SGDLearn(
                 }
                 
                 if(algo == AdaGrad) eta = 1.0;
+                //if(algo == VarianceReduction) eta = 1.0;
 
                 // choose random example
                 double sample_start = GetRuntime();
-                uint r = GetSample(prob);
+                //uint r = GetSample(prob);
+                uint r = BinaryGetSample(sum);
                 sample_time += GetRuntime() - sample_start;
 
                 // calculate prediction
@@ -143,13 +161,13 @@ void Model::SGDLearn(
                     if(cur_loss > 0.0) {
                         temp += Dataset[r].snorm() * Labels[r] * Labels[r] - prediction * Labels[r] * lambda * 2.0;
                     }
-                    temp = std::max(sqrt(temp), 1.0 / num_examples / 100);
+                    temp = std::max(sqrt(temp), prob[0] / num_examples / 100);
                     //if(recent[r].size()==1) 
-                    recent[r].pop_front();
-                    recent[r].push_back(temp);
-                    double peek = 0;
-                    for(std::deque<double>::iterator ele = recent[r].begin(); ele!=recent[r].end();ele++) 
-                        if (*ele > peek) peek = *ele;
+                    //recent[r].pop_front();
+                    //recent[r].push_back(temp);
+                    double peek = temp;
+                    //for(std::deque<double>::iterator ele = recent[r].begin(); ele!=recent[r].end();ele++) 
+                    //    if (*ele > peek) peek = *ele;
                     prob[0] += peek - prob[r + 1];
                     prob[r + 1] = peek; 
                 } else {
@@ -331,6 +349,7 @@ void Model::SDCALearn(
 
     double t;
     std::vector<double> prob;
+    std::vector<double> sum;
     std::deque<double> blank;
     WeightVector W(dimension);
     int m = 50;
@@ -354,13 +373,7 @@ void Model::SDCALearn(
         std::fill(alpha.begin(), alpha.end(), 0);
         prob = p;
         t = 0;
-        if(algo == Online) {
-            recent.clear();
-            for (uint i = 0;i < num_examples; ++i) {
-                recent.push_back(blank);
-                recent[i].push_back(sqrt(Dataset[i].snorm()) + sqrt(lambda));
-            }
-        }
+
         for (uint epoch = 0; epoch < num_epoch; epoch++) {
             
             // * print out probability
@@ -370,6 +383,11 @@ void Model::SDCALearn(
             }
             */
 
+            sum.clear();
+            sum.push_back(0);
+            for (uint i = 1; i <= num_examples; ++i) {
+                sum.push_back(sum[i-1]+prob[i]);
+            }
             // -----------------
             double train_startTime = GetRuntime();
             double epoch_start_time = GetRuntime();
@@ -383,7 +401,8 @@ void Model::SDCALearn(
 
                 // choose random example
                 double sample_start = GetRuntime();
-                uint r = GetSample(prob);
+                //uint r = GetSample(prob);
+                uint r = BinaryGetSample(sum);
                 sample_time += GetRuntime() - sample_start;
 
                 // calculate prediction
@@ -409,13 +428,13 @@ void Model::SDCALearn(
                         }
                         temp = sqrt(temp);
                     }
-                    temp = std::max(temp, 1.0 / num_examples / 100);
+                    temp = std::max(temp, prob[0] / num_examples / 100);
                     //if (recent[r].size()==10) 
-                    recent[r].pop_front();
-                    recent[r].push_back(temp);
-                    double peek = 0;
-                    for(std::deque<double>::iterator ele = recent[r].begin(); ele != recent[r].end(); ele++) 
-                        if (*ele > peek) peek = *ele;
+                    //recent[r].pop_front();
+                    //recent[r].push_back(temp);
+                    double peek = temp;
+                    //for(std::deque<double>::iterator ele = recent[r].begin(); ele != recent[r].end(); ele++) 
+                    //    if (*ele > peek) peek = *ele;
                     prob[0] += peek - prob[r + 1];
                     prob[r + 1] = peek;
                 }
@@ -512,6 +531,16 @@ void Model::SDCALearn(
             output[epoch].test_error += test_error;
 
             if (algo == Adaptive) {
+                /*
+                    prob[0] = 0;
+                    for (uint j = 0; j < num_examples; ++j) {
+                        prob[j + 1] = chiv[j];
+                        chiv[j] = 0;
+                        count[j] = 0;
+                        prob[0] += prob[j + 1];
+                    }
+                    */
+ 
                     double sumup = 0;
                     double comeup = 0;
                     for (uint j = 0; j < num_examples; ++j) {
