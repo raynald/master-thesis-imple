@@ -352,7 +352,7 @@ void Model::SDCALearn(
     std::vector<double> sum;
     std::deque<double> blank;
     WeightVector W(dimension);
-    int m = 50;
+    int m = 2;
 
     output.resize(num_epoch);
     for (std::vector<ResultStruct>::iterator out = output.begin(); out != output.end(); out++ ) { 
