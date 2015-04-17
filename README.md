@@ -1,6 +1,6 @@
 Note:
 ======
-Based on Pegasos
+Based on Pegasos' implementation
 ------
 For technical details see:
 "Pegasos: Primal Estimated sub-GrAdient SOlver for SVM".
@@ -14,7 +14,14 @@ Author
 -----
 Raynald Chung @ETHZ
 
-TO_DO:
+Usage
 -----
-    Usage:
-    Installation:
+ - make
+ - ./optimize [options] <data-file>
+
+Options:
+------
+ - -epoch number of epochs (default = 30)
+ - -round number of round (default = 10)
+ - -lambda regularization parameter (default = 0.0001)
+ - -testFile name of test data file (default = noTestFile)

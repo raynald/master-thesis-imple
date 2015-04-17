@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
     // parse command line
     learning::cmd_line cmdline;
-    cmdline.info("Non-uniform SGD and SDCA algorithm");
+    cmdline.info("Non-Uniform and Adaptive SGD and SDCA algorithm");
     cmdline.add_master_option("<data-file>", &data_filename);
     cmdline.add("-epoch", "number of epoches (default = 30)", &epoch, 30);
     cmdline.add("-round", "number of round (default = 10)", &num_rounds, 10);
